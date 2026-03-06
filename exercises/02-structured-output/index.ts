@@ -1,7 +1,7 @@
 import { config } from "dotenv";
-config({ path: ".env.local" });
 import { ChatAnthropic } from "@langchain/anthropic";
 import { z } from "zod";
+config({ path: ".env.local" });
 
 const model = new ChatAnthropic({
   model: "claude-haiku-4-5",
@@ -9,7 +9,7 @@ const model = new ChatAnthropic({
 });
 
 // --- Example 1: Simple structured output ---
-// Define a schema the LLM must conform to
+// Define a schema the LLM must conform to😜
 const DestinationSuggestion = z.object({
   name: z.string().describe("Name of the destination"),
   country: z.string().describe("Country where it is located"),
@@ -37,13 +37,21 @@ async function main() {
   // --- Example 2: Array of structured outputs ---
   console.log("\n=== Example 2: Array schema (mini TravelerProject) ===\n");
 
-  // TODO(human): Define a TripSummary schema inspired by di-agent-ui's TravelerProjectSchema.
-  // It should capture the essence of a trip plan with 4-6 fields.
-  // Think about: what fields matter for a trip? what types make sense?
-  // Use .describe() on each field — these descriptions guide the LLM.
-  //
-  // Then create a structuredModel2 with model.withStructuredOutput(TripSummary)
-  // and invoke it with a prompt asking to summarize a trip plan.
+  const TripSummary = z.object({
+    destination: z.string().describe("Name of the destination"),
+    dates: z.string().describe("Travel dates and duration"),
+    activities: z.array(z.string()).describe("Activities to do"),
+    accommodations: z.string().describe("Accommodations"),
+    transportation: z.string().describe("Transportation"),
+    budget: z.number().describe("Estimated budget in euros"),
+  });
+
+  const structuredModel2 = model.withStructuredOutput(TripSummary);
+  const result2 = await structuredModel2.invoke(
+    "Summarize a trip to Tokyo for 5 days, including a visit to the Tokyo Tower and a stay at the Hilton Tokyo.",
+  );
+  console.log(result2);
+  console.log("\nType check — result2.budget is a number:", typeof result2.budget);
 }
 
 main();
