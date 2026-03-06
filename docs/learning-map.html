@@ -1064,7 +1064,8 @@ const EXERCISES = [
     concepts: 'react agent, auto tool loop, streamMode',
     insights: [
       'An "agent" is not a new abstraction — it\'s the manual tool loop from exercise 03, automated as a <strong>2-node graph</strong> with one conditional edge.',
-      '<code>streamMode: "messages"</code> gives you the same <code>AIMessageChunk</code>s from exercise 04, but the graph handles re-invocation between tool calls. You stream the whole multi-turn conversation, not just one response.'
+      '<code>streamMode: "messages"</code> gives you the same <code>AIMessageChunk</code>s from exercise 04, but the graph handles re-invocation between tool calls. You stream the whole multi-turn conversation, not just one response.',
+      '<code>streamMode: "updates"</code> is like an X-ray of the graph: each yield shows which node just ran and what it produced. You literally see <code>model_request → tools → model_request → END</code> — the conditional edge logic made visible.'
     ],
     apis: [
       { name: 'createAgent',
@@ -1081,7 +1082,7 @@ const EXERCISES = [
         detail: 'Streams through the entire agent loop. With <code>streamMode: "messages"</code>, yields <code>[message, metadata]</code> tuples — the same <code>AIMessageChunk</code>s as <code>model.stream()</code> in exercise 04, but across the full multi-turn conversation. This is the exact pattern used in di-agent-ui\'s <code>agent-invoker.ts</code>.' },
       { name: 'streamMode',
         from: 'ReactAgent',
-        detail: 'Controls what the stream yields. <code>"messages"</code> = raw message chunks (for real-time UX). <code>"updates"</code> = graph state after each node execution (for debugging/observing step-by-step). <code>"values"</code> = full state snapshot after each step.' },
+        detail: 'Controls what the stream yields. <code>"messages"</code> = raw message chunks (for real-time UX, Part B). <code>"updates"</code> = graph state after each node execution — each chunk is <code>{ model_request: { messages } }</code> or <code>{ tools: { messages } }</code>, revealing the graph\'s step-by-step progression (Part D). <code>"values"</code> = full state snapshot after each step. Can be combined: <code>streamMode: ["updates", "messages"]</code>.' },
       { name: 'langgraph_node',
         from: 'StreamMetadata',
         detail: 'In <code>streamMode: "messages"</code>, each tuple includes <code>metadata.langgraph_node</code> telling you which graph node emitted the chunk ("model_request" or "tools"). Lets you distinguish LLM-generated content from tool execution results in the stream.' },
