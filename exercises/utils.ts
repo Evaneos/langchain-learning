@@ -1,7 +1,50 @@
+import { config } from "dotenv";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { tool } from "@langchain/core/tools";
 import type { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ToolMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
+import { z } from "zod";
+
+config({ path: ".env.local" });
+
+export const model = new ChatAnthropic({
+  model: "claude-haiku-4-5",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+export const getWeatherTool = tool(
+  async ({ city, month }) => {
+    return `${city} in ${month}: 28°C, tropical humidity, occasional rain.`;
+  },
+  {
+    name: "get_weather",
+    description:
+      "Get weather conditions for a city during a specific month. Use when the user asks about climate or best time to visit.",
+    schema: z.object({
+      city: z.string().describe("City name"),
+      month: z.string().describe("Month name (e.g. 'July')"),
+    }),
+  },
+);
+
+export const searchFlightsTool = tool(
+  async ({ from, to }) => {
+    return `${from} → ${to}: 650€, 12h with 1 stopover.`;
+  },
+  {
+    name: "search_flights",
+    description:
+      "Search for flights between two cities. Use when the user mentions flying or needs transport options.",
+    schema: z.object({
+      from: z.string().describe("Departure city"),
+      to: z.string().describe("Destination city"),
+    }),
+  },
+);
+
+export const tools = [getWeatherTool, searchFlightsTool];
 
 const BORDER = "─".repeat(60);
 

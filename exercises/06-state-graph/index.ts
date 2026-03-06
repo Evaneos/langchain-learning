@@ -1,8 +1,4 @@
-import { config } from "dotenv";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { tool } from "@langchain/core/tools";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { z } from "zod";
 // StateGraph is the core primitive of LangGraph. In exercise 05, createAgent
 // built a StateGraph for us. Here we build one from scratch to understand
 // what's inside the box.
@@ -10,46 +6,7 @@ import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph
 // ToolNode is the same automatic tool dispatcher that createAgent uses internally.
 // It reads tool_calls from the last AIMessage and invokes the matching tools.
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-
-config({ path: ".env.local" });
-
-const model = new ChatAnthropic({
-  model: "claude-haiku-4-5",
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// Same tools as exercises 03/04/05 — familiar code, focus on the new concept
-const getWeatherTool = tool(
-  async ({ city, month }) => {
-    return `${city} in ${month}: 28°C, tropical humidity, occasional rain.`;
-  },
-  {
-    name: "get_weather",
-    description:
-      "Get weather conditions for a city during a specific month. Use when the user asks about climate or best time to visit.",
-    schema: z.object({
-      city: z.string().describe("City name"),
-      month: z.string().describe("Month name (e.g. 'July')"),
-    }),
-  },
-);
-
-const searchFlightsTool = tool(
-  async ({ from, to }) => {
-    return `${from} → ${to}: 650€, 12h with 1 stopover.`;
-  },
-  {
-    name: "search_flights",
-    description:
-      "Search for flights between two cities. Use when the user mentions flying or needs transport options.",
-    schema: z.object({
-      from: z.string().describe("Departure city"),
-      to: z.string().describe("Destination city"),
-    }),
-  },
-);
-
-const tools = [getWeatherTool, searchFlightsTool];
+import { model, tools } from "../utils";
 
 // --- Part A: Rebuild createAgent from scratch ---
 async function partA() {
