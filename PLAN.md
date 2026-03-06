@@ -33,7 +33,7 @@ Repo de learning personnel (Next.js minimal + scripts TS) pour comprendre de zé
 | 02 | Structured Output | Zod schema + réponse typée | `traveler-project.schema.ts` |
 | 03 | Tools | `langchain.tool()` + tool calling | `tools/*/index.ts` (8 tools) |
 | 04 | Callbacks | `on_llm_start`, `on_tool_end`, etc. | `tracing.ts` (Langfuse handler) |
-| 05 | ReAct Agent | `createReactAgent()` de LangGraph | Ce que `createDeepAgent()` fait |
+| 05 | ReAct Agent | `createAgent()` de LangGraph | Ce que `createDeepAgent()` fait |
 | 06 | Custom State | `Annotation` + `StateGraph` + mémoire | Projet voyageur, `InMemoryStore` |
 | 07 | Streaming | Stream token par token | `agent.stream()` + `parseLangChainStream()` |
 | 08 | Mini Travel Agent | Tools + state + streaming combinés | Version simplifiée de di-agent-ui |

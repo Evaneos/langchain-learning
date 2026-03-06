@@ -37,7 +37,7 @@ See `exercises/CLAUDE.md` for detailed conventions.
 ## Key context about di-agent-ui
 
 ### Architecture overview
-- **DeepAgents** wraps LangGraph's `createReactAgent()` with opinionated defaults (skills, store, system prompt)
+- **DeepAgents** wraps LangGraph's `createAgent()` with opinionated defaults (skills, store, system prompt)
 - **Agent factory** (`app/api/chat/agent/agent-factory.ts`): Singleton that creates `ChatAnthropic` + `createDeepAgent()`
 - **8 tools**: get/update_traveler_project, get/update_traveler_profile, suggest_destinations, suggest_itineraries, suggest_agencies, display_relevant_suggestion
 - **7 skills**: exploration-destinations, cadrage-projet, profilage-voyageur, projection-experiences, synthese-brief, conseil-arbitrage, cloture-conversation

@@ -52,7 +52,7 @@ Observability (side-car):
 **Provides**:
 - **StateGraph** — define nodes (functions) and edges (transitions) that form the agent's decision loop
 - **Annotations** — typed state that flows through the graph
-- **createReactAgent()** — pre-built ReAct agent (reason + act loop)
+- **createAgent()** — pre-built ReAct agent (reason + act loop)
 - **Checkpointing** — save/restore agent state between interactions
 - **Human-in-the-loop** — pause the agent and wait for user input
 - **Subgraphs** — compose multiple agents together
@@ -81,7 +81,7 @@ Observability (side-car):
 
 **Analogy**: LangGraph is like Next.js — it provides the architecture (routing = graph, middleware = nodes) on top of the building blocks.
 
-**In di-agent-ui**: Not used directly — DeepAgents wraps it. But `createDeepAgent()` internally uses LangGraph's `createReactAgent()`.
+**In di-agent-ui**: Not used directly — DeepAgents wraps it. But `createDeepAgent()` internally uses LangGraph's `createAgent()`.
 
 ### DeepAgents (`deepagents`)
 
@@ -156,8 +156,8 @@ User types message
 |---------|------|-------|
 | `@langchain/core` | Messages, tools, callbacks, base classes | LangChain |
 | `@langchain/anthropic` | `ChatAnthropic` model | LangChain |
-| `langchain` | High-level utilities, tool() helper | LangChain |
-| `@langchain/langgraph` | StateGraph, createReactAgent, nodes/edges | LangGraph |
+| `langchain` | High-level utilities, tool() helper, createAgent | LangChain |
+| `@langchain/langgraph` | StateGraph, nodes/edges | LangGraph |
 | `@langchain/langgraph-checkpoint` | InMemoryStore, checkpointing | LangGraph |
 | `deepagents` | createDeepAgent, FilesystemBackend, skills | DeepAgents |
 | `ai` | createUIMessageStream, server utilities | Vercel AI SDK |

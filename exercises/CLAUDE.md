@@ -26,13 +26,26 @@ Quand un concept d'un exercice précédent est **observable** dans l'exercice co
 
 1. Claude crée l'exercice (exemple 1 complet + TODO(human) pour l'exemple 2)
 2. Claude exécute pour vérifier que l'exemple 1 marche
-3. Claude commit : `feat(exNN): create ...`
-4. L'humain fait l'exemple 2 (ou pas) et dit qu'il a fini
-5. Claude vérifie le code (exécute, review, donne un feedback/insight)
-6. Claude commit : `feat(exNN): complete ...`
-7. Claude propose l'exercice suivant
-8. L'humain valide → retour à 1.
+3. Claude met à jour la **Learning Map** (voir ci-dessous)
+4. Claude commit : `feat(exNN): create ...`
+5. L'humain fait l'exemple 2 (ou pas) et dit qu'il a fini
+6. Claude vérifie le code (exécute, review, donne un feedback/insight)
+7. Claude commit : `feat(exNN): complete ...`
+8. Claude propose l'exercice suivant
+9. L'humain valide → retour à 1.
 
 ## Learning Map
 
-A chaque creation d'exercice (etape 1 du workflow), mettre a jour `docs/learning-map.html` avec le nouveau noeud, ses APIs, et ses connexions (prereqs, shared concepts).
+Avant le commit de création (étape 4), mettre à jour le noeud dans `docs/learning-map.html` :
+
+### Données du noeud
+
+- **`done: true`** si l'exemple 1 fonctionne
+- **`concepts`** : concepts clés, courts, séparés par virgule
+- **`apis[]`** : chaque API clé avec `name`, `from` (package d'origine), `detail` (explication pédagogique riche avec `<code>`, contexte di-agent-ui si pertinent, et liens vers les autres exercices), `signature` optionnelle
+- **`insights[]`** : phrases "aha moment" qui créent un déclic de compréhension. Non-obvious, intelligentes. Peuvent faire le pont entre exercices ("Structured output IS tool calling in disguise"). Laisser vide si rien de pertinent — mieux vaut 0 insight que des insights médiocres
+
+### Connexions
+
+- **`prereqs[]`** : exercices nécessaires pour comprendre celui-ci. Vérifier que le graphe de dépendances reste cohérent (pas de cycle, pas de prereq manquant)
+- **`shared[]`** : concepts qui traversent les exercices et changent de sens ou de forme (ex: `stop_reason` évolue entre 01→03→04, `Zod schemas` réutilisés entre 02→03). Vérifier aussi si des exercices **existants** doivent ajouter un `shared` pointant vers le nouveau

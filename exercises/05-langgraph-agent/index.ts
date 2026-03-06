@@ -3,10 +3,12 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import { z } from "zod";
-// createReactAgent is LangGraph's prebuilt agent — it wires up the ReAct loop
+// createAgent is LangGraph's prebuilt agent — it wires up the ReAct loop
 // as a graph: agent node (LLM) ↔ tools node (ToolNode), with a conditional
 // edge that loops back if the LLM requests tool calls.
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+// Previously `createReactAgent` from "@langchain/langgraph/prebuilt" (now deprecated),
+// it moved to the `langchain` package as `createAgent`.
+import { createAgent } from "langchain";
 config({ path: ".env.local" });
 
 // --- Slow-motion mode: `npx tsx index.ts B --slow` to observe chunks at human speed ---
@@ -52,17 +54,17 @@ const searchFlightsTool = tool(
 
 const tools = [getWeatherTool, searchFlightsTool];
 
-// --- Part A: createReactAgent + invoke ---
+// --- Part A: createAgent + invoke ---
 async function partA() {
-  console.log("=== Part A: createReactAgent with .invoke() ===\n");
+  console.log("=== Part A: createAgent with .invoke() ===\n");
 
-  // createReactAgent() builds a LangGraph StateGraph with:
+  // createAgent() builds a LangGraph StateGraph with:
   //   - "agent" node: calls the LLM with the current messages
   //   - "tools" node: a ToolNode that dispatches tool calls automatically
   //   - conditional edge: if LLM returns tool_calls → go to "tools" → back to "agent"
   //                       if LLM returns text (end_turn) → END
   // This replaces the entire manual loop from exercises 03/04.
-  const agent = createReactAgent({ llm: model, tools });
+  const agent = createAgent({ model, tools });
 
   const userMessage = new HumanMessage(
     "I want to go to Bali in July, flying from Paris. What's the weather like and how do I get there?",
@@ -101,7 +103,7 @@ async function partA() {
 async function partB() {
   console.log("=== Part B: Agent streaming (streamMode: 'messages') ===\n");
 
-  const agent = createReactAgent({ llm: model, tools });
+  const agent = createAgent({ model, tools });
 
   const userMessage = new HumanMessage("What's the weather in Bali in July?");
 
@@ -115,7 +117,7 @@ async function partB() {
   );
 
   // Each iteration yields a tuple: [message, metadata]
-  // metadata.langgraph_node tells you which graph node emitted it ("agent" or "tools")
+  // metadata.langgraph_node tells you which graph node emitted it ("model_request" or "tools")
   for await (const [message, metadata] of stream) {
     if (SLOW_MODE) await delay(CHUNK_DELAY_MS);
 
@@ -139,7 +141,7 @@ async function partB() {
       if (chunk.tool_call_chunks && chunk.tool_call_chunks.length > 0) {
         for (const tc of chunk.tool_call_chunks) {
           if (tc.name) {
-            // metadata.langgraph_node confirms this comes from the "agent" node
+            // metadata.langgraph_node confirms this comes from the "model_request" node
             process.stdout.write(
               `\n[${metadata.langgraph_node}] tool-call: ${tc.name} (id: ${tc.id})\n`,
             );
@@ -156,13 +158,14 @@ async function partB() {
 async function partC() {
   console.log("=== Part C: Agent with system prompt ===\n");
 
-  // The `prompt` parameter injects a system message at the start of every conversation.
+  // The `systemPrompt` parameter injects a system message at the start of every conversation.
   // In di-agent-ui, this is the massive system prompt built from skills + context.
-  // createReactAgent accepts it as a string — it wraps it in SystemMessage internally.
-  const agent = createReactAgent({
-    llm: model,
+  // createAgent accepts it as a string — it wraps it in SystemMessage internally.
+  // (In the old createReactAgent API, this was called `prompt`.)
+  const agent = createAgent({
+    model,
     tools,
-    prompt:
+    systemPrompt:
       "You are a travel advisor specialized in Southeast Asia. " +
       "Always mention visa requirements and best travel season. " +
       "Be concise — answer in 3 sentences max.",
@@ -190,11 +193,11 @@ async function partC() {
 // Your task:
 // 1. Create the agent (same as Part B)
 // 2. Use agent.stream({ messages: [...] }, { streamMode: "updates" })
-// 3. Each iteration yields an object like { agent: { messages: [...] } }
+// 3. Each iteration yields an object like { model_request: { messages: [...] } }
 //    or { tools: { messages: [...] } } — the key is the node name
 // 4. Log each step: which node ran, what messages it produced
 //
-// This reveals the graph structure: you'll see "agent" → "tools" → "agent" → END
+// This reveals the graph structure: you'll see "model_request" → "tools" → "model_request" → END
 // which maps to the conditional edge logic described in the README.
 
 // Run a specific part with: npx tsx index.ts A (or B, C). No arg = run all.
