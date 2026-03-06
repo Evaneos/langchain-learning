@@ -14,6 +14,8 @@ Les commentaires doivent expliquer le "quoi" et le "pourquoi", pas le "comment" 
 - **Garder les mêmes patterns de code** : si un exercice utilise `const userMessage = new HumanMessage(...)` avant l'appel, les exercices suivants doivent faire pareil (pas de `new HumanMessage(...)` inline).
 - **Découper en fonctions** quand un exercice a plusieurs parties autonomes (Part A, B, C…). Chaque partie = une `async function partX()` appelée depuis `main()`. Si les parties sont courtes et interdépendantes, un seul `main()` suffit.
 - **Filtrage par partie** : quand l'exercice a des parties, lire `process.argv[2]` pour permettre `npm run latest -- A` (une seule partie) ou `npm run latest` (toutes). Pattern : `const partFilter = process.argv[2]?.toUpperCase();` puis `if (!partFilter || partFilter === "A") await partA();`.
+- **Slow-motion mode** : quand un exercice implique du streaming ou des flux rapides, ajouter un flag `--slow` (via `process.argv.includes("--slow")`) avec un délai configurable entre chaque chunk/itération. Permet d'observer le comportement en temps réel. Pattern : `const SLOW_MODE = process.argv.includes("--slow");` + `if (SLOW_MODE) await delay(CHUNK_DELAY_MS);` dans les boucles.
+- **Utiliser `exercises/utils.ts`** pour les patterns déjà appris dans les exercices précédents (`collectStream`, `executeToolCalls`, `logAIMessage`, `writeChunkText`). Importer depuis `../utils` au lieu de dupliquer. **Mais** : tout concept **nouveau** pour l'exercice DOIT rester visible inline dans le code, même si ça ressemble à du code utilitaire. L'apprenant doit voir le code des concepts qu'il apprend.
 - En résumé : seul ce qui est **nouveau** pour l'exercice change. Le reste reste identique.
 
 ### Liens entre exercices
@@ -30,3 +32,7 @@ Quand un concept d'un exercice précédent est **observable** dans l'exercice co
 6. Claude commit : `feat(exNN): complete ...`
 7. Claude propose l'exercice suivant
 8. L'humain valide → retour à 1.
+
+## Learning Map
+
+A chaque creation d'exercice (etape 1 du workflow), mettre a jour `docs/learning-map.html` avec le nouveau noeud, ses APIs, et ses connexions (prereqs, shared concepts).

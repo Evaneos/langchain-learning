@@ -1,10 +1,16 @@
 import { config } from "dotenv";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 import type { AIMessageChunk } from "@langchain/core/messages";
 import { z } from "zod";
+import { collectStream, executeToolCalls } from "../utils";
 config({ path: ".env.local" });
+
+// --- Slow-motion mode: `npx tsx index.ts B --slow` to observe chunks at human speed ---
+const SLOW_MODE = process.argv.includes("--slow");
+const CHUNK_DELAY_MS = 150; // tweak this to go faster/slower
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const model = new ChatAnthropic({
   model: "claude-haiku-4-5",
@@ -48,6 +54,7 @@ async function partA() {
 
   for await (const chunk of stream) {
     // chunk.content is a string fragment — write without newline for real-time effect
+    if (SLOW_MODE) await delay(CHUNK_DELAY_MS);
     process.stdout.write(chunk.content as string);
   }
   console.log("\n");
@@ -67,6 +74,7 @@ async function partB() {
 
   for await (const chunk of stream) {
     chunks.push(chunk);
+    if (SLOW_MODE) await delay(CHUNK_DELAY_MS);
 
     // Text content — stream it live
     if (chunk.content && typeof chunk.content === "string" && chunk.content.length > 0) {
@@ -110,40 +118,22 @@ async function partC() {
 
   const userMessage = new HumanMessage("What's the weather in Bali in July?");
 
-  // Step 1: Stream the LLM response (tool call)
-  const step1Stream = await modelWithTools.stream([userMessage]);
-  const step1Chunks: AIMessageChunk[] = [];
-  for await (const chunk of step1Stream) {
-    step1Chunks.push(chunk);
-  }
-  const aiResponse = step1Chunks.reduce((acc, chunk) => acc.concat(chunk));
+  const streamOpts = { display: true, slow: SLOW_MODE, delayMs: CHUNK_DELAY_MS };
 
-  // Step 2: Execute tools (same as exercise 03)
-  const toolMessages: ToolMessage[] = [];
-  for (const toolCall of aiResponse.tool_calls ?? []) {
-    const selectedTool = tools.find((t) => t.name === toolCall.name)!;
-    // @ts-expect-error -- union of tool types not callable, resolved by ToolNode in exercise 05
-    const result: string = await selectedTool.invoke(toolCall.args);
-    toolMessages.push(
-      new ToolMessage({ content: result, tool_call_id: toolCall.id! }),
-    );
-    console.log(`Executed ${toolCall.name}:`, result);
-  }
+  // Step 1: Collect the LLM response (tool call)
+  console.log("--- Step 1: LLM decides to call a tool ---");
+  const aiResponse = await collectStream(await modelWithTools.stream([userMessage]), streamOpts);
 
-  // Step 3: Stream the final answer — the LLM now has tool results and responds with text
-  console.log("\n--- Streaming final response ---");
-  const step3Stream = await modelWithTools.stream([
-    userMessage,
-    aiResponse,
-    ...toolMessages,
-  ]);
+  // Step 2: Execute tools
+  console.log("--- Step 2: Execute tool calls ---");
+  const toolMessages = await executeToolCalls(aiResponse, tools);
 
-  for await (const chunk of step3Stream) {
-    if (chunk.content && typeof chunk.content === "string") {
-      process.stdout.write(chunk.content);
-    }
-  }
-  console.log("\n");
+  // Step 3: Stream the final answer
+  console.log("\n--- Step 3: Stream final response ---");
+  await collectStream(
+    await modelWithTools.stream([userMessage, aiResponse, ...toolMessages]),
+    streamOpts,
+  );
 }
 
 // Run a specific part with: npx tsx index.ts A (or B, C). No arg = run all.
