@@ -20,14 +20,13 @@ async function main() {
 
   // --- Example 2: Message objects + AIMessage inspection ---
   console.log("\n=== Example 2: Message objects ===\n");
-
-  // TODO(human): Call model.invoke() with an array of typed messages:
-  //   - A SystemMessage that gives the assistant a persona
-  //   - A HumanMessage with your question
-  // Then log:
-  //   - The response content
-  //   - The AIMessage type (constructor.name)
-  //   - The response_metadata (JSON.stringify it to explore what's inside)
+  const response2 = await model.invoke([
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("What is LangChain in one sentence?"),
+  ]);
+  console.log(response2.content);
+  console.log(`Tokens: ${response2.usage_metadata?.input_tokens} in / ${response2.usage_metadata?.output_tokens} out`);
+  console.log(JSON.stringify(response2.response_metadata, null, 2));
 }
 
 main();
