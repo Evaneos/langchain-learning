@@ -162,7 +162,8 @@ const EXERCISES = [
     insights: [
       '<code>createAgent</code> is just <strong>5 lines of StateGraph</strong>: 2 nodes, 3 edges, 1 conditional. Once you see it, "agent" stops being magic.',
       'A node is just <code>async (state) => partialState</code>. No class, no interface — just a function that reads state and returns what changed. The graph handles the rest.',
-      'The <strong>append reducer</strong> on <code>messages</code> is why nodes return <code>{ messages: [newMsg] }</code> not the full array. The graph merges, you don\'t.'
+      'The <strong>append reducer</strong> on <code>messages</code> is why nodes return <code>{ messages: [newMsg] }</code> not the full array. The graph merges, you don\'t.',
+      'The order of <code>.addEdge()</code> calls <strong>doesn\'t matter</strong> — you\'re declaring a routing table, not a sequence. You could shuffle every edge declaration and the graph would be identical. Execution order comes from the topology, not the code order.'
     ],
     apis: [
       { name: 'StateGraph',

@@ -6,7 +6,7 @@ import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph
 // ToolNode is the same automatic tool dispatcher that createAgent uses internally.
 // It reads tool_calls from the last AIMessage and invokes the matching tools.
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { model, tools } from "../utils";
+import { model, tools, logConversation } from "../utils";
 
 // --- Part A: Rebuild createAgent from scratch ---
 async function partA() {
@@ -46,6 +46,11 @@ async function partA() {
   // Step 4: Wire everything into a StateGraph.
   // MessagesAnnotation defines the state shape: { messages: BaseMessage[] }
   // with a built-in reducer that appends new messages instead of replacing.
+  //
+  // IMPORTANT: The order of .addEdge() / .addConditionalEdges() calls DOES NOT MATTER.
+  // You're declaring a routing table (graph topology), not writing sequential instructions.
+  // The lines below could be reordered freely — the graph would be identical.
+  // Execution order is determined by the graph structure, not by declaration order.
   const graph = new StateGraph(MessagesAnnotation)
     // addNode(name, function) — registers a node in the graph
     .addNode("agent", callModel)
@@ -54,7 +59,8 @@ async function partA() {
     // This is the same ToolNode that createAgent uses internally.
     .addNode("tools", new ToolNode(tools))
     // addEdge(from, to) — unconditional edge: always go from A to B
-    // START → "agent": the graph always begins by calling the LLM
+    // START declared first arbitrarily — declaration order doesn't matter.
+    // The graph still begins here because START is the entry point by definition.
     .addEdge(START, "agent")
     // addConditionalEdges(from, routingFn) — the routing function returns
     // the name of the next node (or END). This is the ReAct loop's branching point.
@@ -75,21 +81,7 @@ async function partA() {
 
   // Same output format as exercise 05 Part A — proving our hand-built graph
   // behaves identically to createAgent.
-  for (const msg of result.messages) {
-    const { type } = msg;
-    if (type === "human") {
-      console.log(`[human] ${(msg.content as string).slice(0, 80)}...`);
-    } else if (type === "ai" && (msg as AIMessage).tool_calls?.length) {
-      const calls = (msg as AIMessage).tool_calls!.map(
-        (tc) => `${tc.name}(${JSON.stringify(tc.args)})`,
-      );
-      console.log(`[ai → tool_calls] ${calls.join(", ")}`);
-    } else if (type === "tool") {
-      console.log(`[tool result] ${(msg.content as string).slice(0, 80)}`);
-    } else if (type === "ai") {
-      console.log(`[ai → final] ${(msg.content as string).slice(0, 120)}...`);
-    }
-  }
+  logConversation(result.messages);
   console.log();
 }
 
@@ -102,16 +94,22 @@ async function partB() {
   // Here we simulate that: a "prepare" node reads raw traveler data from the state
   // and builds a systemPrompt that the agent node will use.
 
-  // Extend the state with custom fields — Annotation.Root lets you add
-  // fields beyond just messages.
-  // NOTE: We import Annotation from @langchain/langgraph (same package as StateGraph).
+  // Annotation defines state — the name is misleading but the idea is:
+  // it "annotates" each field with HOW to update it (replace? append? merge?).
+  // So Annotation.Root() = "define a state shape where each field knows its update strategy."
+  // MessagesAnnotation's `messages` field is annotated with "append", custom fields default to "replace".
   const { Annotation } = await import("@langchain/langgraph");
   const GraphState = Annotation.Root({
-    // Spread MessagesAnnotation.spec to inherit the `messages` field with its reducer
+    // Without this spread, our custom state would have NO messages field.
+    // MessagesAnnotation.spec contains the `messages` field definition + its append reducer.
     ...MessagesAnnotation.spec,
-    // Raw traveler context — the input data
-    travelContext: Annotation<string>,
-    // Built by the prepare node, read by the agent node
+    // Raw traveler context — the input data.
+    // Explicit reducer: (old, new) => new = replace strategy (last write wins).
+    travelContext: Annotation<string>({
+      reducer: (_current, update) => update,
+      default: () => "",
+    }),
+    // Annotation<T> with no options is shorthand for the same "replace" strategy above.
     systemPrompt: Annotation<string>,
   });
 
@@ -125,7 +123,9 @@ async function partB() {
       `You are a travel advisor. Here is context about the traveler:\n${state.travelContext}\n\n` +
       "Use this context to personalize your recommendations. Be concise — 3 sentences max.";
     console.log("[prepare node] Built system prompt from traveler context");
-    // Update the systemPrompt field — other nodes can read it
+    // Partial return: only the keys you include get updated. travelContext and messages
+    // are untouched. If we added `messages` here, the append reducer would kick in.
+    // If we added `travelContext`, it would be replaced (last write wins).
     return { systemPrompt: prompt };
   }
 
@@ -138,6 +138,9 @@ async function partB() {
       ...state.messages,
     ];
     const response = await modelWithTools.invoke(messagesWithSystem);
+    // We return an array with ONE message, but the append reducer from
+    // MessagesAnnotation.spec merges it into the existing messages array.
+    // That's why we don't return all messages — just the new one.
     return { messages: [response] };
   }
 
@@ -167,7 +170,7 @@ async function partB() {
     ],
     // This custom field flows through the state — the prepare node reads it
     travelContext: "Budget traveler, prefers hostels, vegetarian, first time in Asia.",
-    systemPrompt: "", // will be overwritten by prepare node
+    // systemPrompt: "", // will be overwritten by prepare node
   });
 
   console.log(`Total messages: ${result.messages.length}\n`);

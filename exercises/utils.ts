@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
-import type { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { AIMessage, AIMessageChunk, BaseMessage } from "@langchain/core/messages";
 import { ToolMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
@@ -150,6 +150,27 @@ export function writeChunkText(chunk: AIMessageChunk): void {
       if (block.type === "text" && block.text) {
         process.stdout.write(block.text as string);
       }
+    }
+  }
+}
+
+/**
+ * Log a compact summary of each message in a conversation (graph result).
+ */
+export function logConversation(messages: BaseMessage[]): void {
+  for (const msg of messages) {
+    const { type } = msg;
+    if (type === "human") {
+      console.log(`[human] ${(msg.content as string).slice(0, 80)}...`);
+    } else if (type === "ai" && (msg as AIMessage).tool_calls?.length) {
+      const calls = (msg as AIMessage).tool_calls!.map(
+        (tc) => `${tc.name}(${JSON.stringify(tc.args)})`,
+      );
+      console.log(`[ai → tool_calls] ${calls.join(", ")}`);
+    } else if (type === "tool") {
+      console.log(`[tool result] ${(msg.content as string).slice(0, 80)}`);
+    } else if (type === "ai") {
+      console.log(`[ai → final] ${(msg.content as string).slice(0, 120)}...`);
     }
   }
 }
