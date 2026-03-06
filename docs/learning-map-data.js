@@ -157,9 +157,53 @@ const EXERCISES = [
     shared: [{ concept: 'agent graph', targets: ['06', '09'] }]
   },
   {
-    id: '06', title: 'StateGraph', layer: 'lg', done: false,
-    concepts: 'state graph, nodes, edges',
-    apis: [], prereqs: ['05'], shared: []
+    id: '06', title: 'StateGraph', layer: 'lg', done: true,
+    concepts: 'state graph, nodes, edges, custom state, pre-processing',
+    insights: [
+      '<code>createAgent</code> is just <strong>5 lines of StateGraph</strong>: 2 nodes, 3 edges, 1 conditional. Once you see it, "agent" stops being magic.',
+      'A node is just <code>async (state) => partialState</code>. No class, no interface — just a function that reads state and returns what changed. The graph handles the rest.',
+      'The <strong>append reducer</strong> on <code>messages</code> is why nodes return <code>{ messages: [newMsg] }</code> not the full array. The graph merges, you don\'t.'
+    ],
+    apis: [
+      { name: 'StateGraph',
+        from: '@langchain/langgraph',
+        signature: 'new StateGraph(annotation)',
+        detail: 'The core primitive. Takes a state annotation (shape + reducers) and lets you build a graph with <code>.addNode()</code>, <code>.addEdge()</code>, <code>.addConditionalEdges()</code>. After <code>.compile()</code>, you get a runnable with the same <code>.invoke()</code> and <code>.stream()</code> as <code>createAgent</code>. In exercise 05, <code>createAgent</code> built one for us. Here we build it ourselves.' },
+      { name: 'MessagesAnnotation',
+        from: '@langchain/langgraph',
+        detail: 'A prebuilt state annotation with a single field: <code>messages: BaseMessage[]</code>. Its reducer <strong>appends</strong> new messages instead of replacing — that\'s why each node returns <code>{ messages: [response] }</code> and the full conversation accumulates automatically. This is what <code>createAgent</code> uses internally.' },
+      { name: 'Annotation.Root()',
+        from: '@langchain/langgraph',
+        signature: 'Annotation.Root({ ...MessagesAnnotation.spec, myField: Annotation<T> })',
+        detail: 'Extends the state with custom fields beyond <code>messages</code>. Spread <code>MessagesAnnotation.spec</code> to keep the messages reducer, then add your own fields. In Part B, we add <code>travelContext</code> (input) and <code>systemPrompt</code> (built by the prepare node). In di-agent-ui, this is where you\'d store traveler profile, skill context, etc.' },
+      { name: 'addNode()',
+        from: 'StateGraph',
+        signature: '.addNode(name, fn | ToolNode)',
+        detail: 'Registers a node in the graph. The function receives the full state and returns a partial state update (only the fields that changed). Can also be a <code>ToolNode</code> instance for automatic tool dispatch. Nodes are the "steps" of your workflow.' },
+      { name: 'addEdge()',
+        from: 'StateGraph',
+        signature: '.addEdge(from, to)',
+        detail: 'Unconditional edge: always go from node A to node B. <code>.addEdge(START, "agent")</code> means the graph always begins at the agent. <code>.addEdge("tools", "agent")</code> means after tools execute, always go back to the agent.' },
+      { name: 'addConditionalEdges()',
+        from: 'StateGraph',
+        signature: '.addConditionalEdges(from, routingFn)',
+        detail: 'The branching point. The routing function receives the state and returns the name of the next node (or <code>END</code>). This is the ReAct loop\'s heart: check <code>lastMessage.tool_calls</code> → "tools" or <code>END</code>. You can route to any node, enabling complex flows impossible with <code>createAgent</code>.' },
+      { name: 'START / END',
+        from: '@langchain/langgraph',
+        detail: 'Special constants for the graph\'s entry and exit points. <code>START</code> is where <code>.invoke()</code> begins. <code>END</code> is where the graph stops and returns the final state. A routing function returning <code>END</code> terminates the loop.' },
+      { name: 'ToolNode',
+        from: '@langchain/langgraph/prebuilt',
+        signature: 'new ToolNode(tools)',
+        detail: 'The same automatic tool dispatcher that <code>createAgent</code> uses. Reads <code>tool_calls</code> from the last <code>AIMessage</code>, invokes the matching tools, and returns <code>ToolMessage</code>s. You don\'t need to write the dispatch loop from exercise 03 — <code>ToolNode</code> does it.' },
+      { name: '.compile()',
+        from: 'StateGraph',
+        detail: 'Freezes the graph and returns a <code>CompiledGraph</code> — a runnable with <code>.invoke()</code>, <code>.stream()</code>, same interface as what <code>createAgent</code> returns. After compile, you can\'t add more nodes or edges.' }
+    ],
+    prereqs: ['05'],
+    shared: [
+      { concept: 'custom state', targets: ['07', '08'] },
+      { concept: 'graph nodes', targets: ['07'] }
+    ]
   },
   {
     id: '07', title: 'Checkpointing', layer: 'lg', done: false,
