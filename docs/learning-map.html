@@ -95,7 +95,7 @@
   /* ── LEGEND ── */
   .legend {
     position: relative;
-    z-index: 2;
+    z-index: 10;
     display: flex;
     justify-content: center;
     gap: 32px;
@@ -127,9 +127,9 @@
 
   .legend-tooltip {
     position: absolute;
-    bottom: calc(100% + 10px);
+    top: calc(100% + 10px);
     left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%) translateY(-4px);
     width: 280px;
     background: var(--bg-surface);
     border: 1px solid rgba(255,255,255,0.1);
@@ -144,7 +144,7 @@
 
   .legend-item[data-layer]:hover .legend-tooltip {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0px);
   }
 
   .legend-tooltip-name {
@@ -168,11 +168,11 @@
   .legend-tooltip::after {
     content: '';
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: rgba(255,255,255,0.1);
+    border-bottom-color: rgba(255,255,255,0.1);
   }
 
   .legend-swatch {
@@ -195,7 +195,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: -1;
     overflow: visible;
   }
 
@@ -211,6 +211,12 @@
     filter: drop-shadow(0 0 3px currentColor);
   }
 
+  .conn-arrow {
+    stroke: none;
+    stroke-width: 0;
+    animation: arrowAppear 0.3s ease-out backwards;
+  }
+
   /* ── TREE CONTAINER ── */
   .tree-container {
     position: relative;
@@ -223,6 +229,7 @@
   /* ── LAYER ── */
   .layer {
     position: relative;
+    z-index: 1;
     margin-bottom: 200px;
   }
 
@@ -231,6 +238,8 @@
   }
 
   .layer-label {
+    position: relative;
+    z-index: 2;
     display: inline-flex;
     flex-direction: column;
     gap: 6px;
@@ -258,9 +267,9 @@
     line-height: 1.4;
   }
 
-  .layer--lc .layer-label { color: var(--lc-label); background: var(--lc-bg); border: 1px solid var(--lc-border); }
-  .layer--lg .layer-label { color: var(--lg-label); background: var(--lg-bg); border: 1px solid var(--lg-border); }
-  .layer--da .layer-label { color: var(--da-label); background: var(--da-bg); border: 1px solid var(--da-border); }
+  .layer--lc .layer-label { color: var(--lc-label); background: rgba(52, 211, 153, 0.06); backdrop-filter: blur(8px); border: 1px solid var(--lc-border); }
+  .layer--lg .layer-label { color: var(--lg-label); background: rgba(56, 189, 248, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--lg-border); }
+  .layer--da .layer-label { color: var(--da-label); background: rgba(251, 146, 60, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--da-border); }
 
   /* LangChain: 2x2 grid — gives room for diagonal connections */
   .layer--lc .layer-nodes {
@@ -290,7 +299,8 @@
     position: relative;
     width: 200px;
     min-height: 100px;
-    background: var(--bg-card);
+    background: rgba(26, 35, 50, 0.7);
+    backdrop-filter: blur(8px);
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 12px;
     padding: 16px;
@@ -303,12 +313,13 @@
   }
 
   .node:hover {
-    background: var(--bg-card-hover);
+    background: rgba(31, 43, 61, 0.8);
     transform: translateY(-3px);
     z-index: 10;
   }
 
   .node--done {
+    background: rgba(26, 35, 50, 0.85);
     border-color: rgba(255,255,255,0.1);
   }
 
@@ -343,12 +354,22 @@
   .node--done:hover::after { opacity: 0.28; }
 
   .node--future {
-    opacity: var(--node-future-opacity);
+    background: rgba(26, 35, 50, 0.35);
     border-style: dashed;
-    border-color: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.04);
   }
 
-  .node--future:hover { opacity: 0.6; }
+  .node--future .node-title,
+  .node--future .node-tags,
+  .node--future .node-number { opacity: 0.45; }
+
+  .node--future:hover {
+    background: rgba(26, 35, 50, 0.55);
+  }
+
+  .node--future:hover .node-title,
+  .node--future:hover .node-tags,
+  .node--future:hover .node-number { opacity: 0.75; }
 
   .node-header {
     display: flex;
@@ -451,7 +472,7 @@
     z-index: 100;
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    max-height: 320px;
+    max-height: 60vh;
     overflow-y: auto;
     backdrop-filter: blur(24px);
   }
@@ -873,13 +894,17 @@
   .node { animation: nodeAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
 
   @keyframes drawLine {
-    from { stroke-dashoffset: 1000; }
+    from { stroke-dashoffset: var(--line-len); }
     to { stroke-dashoffset: 0; }
   }
 
   .conn-prereq {
-    stroke-dasharray: 1000;
-    animation: drawLine 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: drawLine 0.5s ease-out backwards;
+  }
+
+  @keyframes arrowAppear {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* ── RESPONSIVE ── */
@@ -1215,22 +1240,29 @@ function createSVG() {
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('connections-svg');
-  const rect = container.getBoundingClientRect();
-  svg.setAttribute('width', rect.width);
-  svg.setAttribute('height', rect.height);
-  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+  const cw = container.scrollWidth, ch = container.scrollHeight;
+  svg.setAttribute('width', cw);
+  svg.setAttribute('height', ch);
+  svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
+
   container.prepend(svg);
 
-  const cr = container.getBoundingClientRect();
+  // Get element position relative to container WITHOUT CSS transform influence
+  function getOffsetPos(el) {
+    let x = 0, y = 0;
+    let cur = el;
+    while (cur && cur !== container) {
+      x += cur.offsetLeft;
+      y += cur.offsetTop;
+      cur = cur.offsetParent;
+    }
+    return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+  }
 
   function getEdge(id, side) {
     const el = container.querySelector(`[data-id="${id}"]`);
     if (!el) return null;
-    const r = el.getBoundingClientRect();
-    const x = r.left - cr.left;
-    const y = r.top - cr.top;
-    const w = r.width;
-    const h = r.height;
+    const { x, y, w, h } = getOffsetPos(el);
     switch (side) {
       case 'top':    return { x: x + w / 2, y };
       case 'bottom': return { x: x + w / 2, y: y + h };
@@ -1242,16 +1274,16 @@ function createSVG() {
   function getNodeRect(id) {
     const el = container.querySelector(`[data-id="${id}"]`);
     if (!el) return null;
-    const r = el.getBoundingClientRect();
+    const { x, y, w, h } = getOffsetPos(el);
     return {
-      left: r.left - cr.left,
-      top: r.top - cr.top,
-      right: r.right - cr.left,
-      bottom: r.bottom - cr.top,
-      cx: r.left - cr.left + r.width / 2,
-      cy: r.top - cr.top + r.height / 2,
-      width: r.width,
-      height: r.height
+      left: x,
+      top: y,
+      right: x + w,
+      bottom: y + h,
+      cx: x + w / 2,
+      cy: y + h / 2,
+      width: w,
+      height: h
     };
   }
 
@@ -1259,6 +1291,8 @@ function createSVG() {
     const fr = getNodeRect(fromId);
     const tr = getNodeRect(toId);
     if (!fr || !tr) return null;
+
+    const GAP = 3; // space for arrow marker
 
     // Same row? Check vertical overlap
     const sameRow = !(fr.bottom < tr.top - 10 || tr.bottom < fr.top - 10);
@@ -1268,6 +1302,8 @@ function createSVG() {
       const goingRight = fr.cx < tr.cx;
       const from = getEdge(fromId, goingRight ? 'right' : 'left');
       const to = getEdge(toId, goingRight ? 'left' : 'right');
+      // Pull endpoint away from card
+      to.x += goingRight ? -GAP : GAP;
       const dist = Math.abs(to.x - from.x);
       const cp = dist * 0.35;
       return `M ${from.x} ${from.y} C ${from.x + (goingRight ? cp : -cp)} ${from.y}, ${to.x + (goingRight ? -cp : cp)} ${to.y}, ${to.x} ${to.y}`;
@@ -1275,6 +1311,7 @@ function createSVG() {
       // Vertical / diagonal connection: bottom → top
       const from = getEdge(fromId, 'bottom');
       const to = getEdge(toId, 'top');
+      to.y -= GAP; // pull endpoint above card
       const dy = to.y - from.y;
       const cp = Math.max(dy * 0.45, 40);
       return `M ${from.x} ${from.y} C ${from.x} ${from.y + cp}, ${to.x} ${to.y - cp}, ${to.x} ${to.y}`;
@@ -1288,25 +1325,64 @@ function createSVG() {
       if (!d) return;
 
       const sourceEx = EXERCISES.find(e => e.id === prereqId);
+      const color = LAYER_META[sourceEx.layer].lineColor;
+      const delay = `${i * 0.06}s`;
+
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
       path.classList.add('conn-prereq');
-      path.style.stroke = LAYER_META[sourceEx.layer].lineColor;
-      path.style.animationDelay = `${0.3 + i * 0.08}s`;
+      path.style.stroke = color;
+      path.style.animationDelay = delay;
       path.dataset.from = prereqId;
       path.dataset.to = ex.id;
       svg.appendChild(path);
+
+      // Filled arrowhead — line stops at arrow base, base is perpendicular
+      const len = path.getTotalLength();
+      const ARROW_LEN = 8, ARROW_HALF_W = 4;
+      const tip = path.getPointAtLength(len);
+      const base = path.getPointAtLength(len - ARROW_LEN);
+      // Clip the line so it stops at the arrow base + animate draw
+      const visibleLen = len - ARROW_LEN;
+      path.style.strokeDasharray = `${visibleLen} ${len}`;
+      path.style.setProperty('--line-len', visibleLen);
+      // Direction & perpendicular
+      const angle = Math.atan2(tip.y - base.y, tip.x - base.x);
+      const perp = angle + Math.PI / 2;
+      const bx1 = base.x + ARROW_HALF_W * Math.cos(perp);
+      const by1 = base.y + ARROW_HALF_W * Math.sin(perp);
+      const bx2 = base.x - ARROW_HALF_W * Math.cos(perp);
+      const by2 = base.y - ARROW_HALF_W * Math.sin(perp);
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      arrow.setAttribute('points', `${bx1},${by1} ${tip.x},${tip.y} ${bx2},${by2}`);
+      arrow.classList.add('conn-arrow');
+      arrow.style.fill = color;
+      arrow.style.animationDelay = `${parseFloat(delay) + 0.5}s`;
+      arrow.dataset.from = prereqId;
+      arrow.dataset.to = ex.id;
+      svg.appendChild(arrow);
     });
   });
 }
 
-createSVG();
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(createSVG, 150);
-});
-setTimeout(createSVG, 600);
+// Draw connections once the first node animation ends (layout is stable)
+const firstNode = container.querySelector('.node');
+let svgReady = false;
+function initSVG() {
+  if (svgReady) return;
+  svgReady = true;
+  createSVG();
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(createSVG, 150);
+  });
+}
+if (firstNode) {
+  firstNode.addEventListener('animationend', initSVG, { once: true });
+}
+// Fallback
+setTimeout(initSVG, 800);
 
 // ════════════════════════════════════════════════════════════
 // TOOLTIP (hover)
@@ -1346,9 +1422,9 @@ function hideTooltip() {
 function highlightConnections(id) {
   const svg = container.querySelector('.connections-svg');
   if (!svg) return;
-  svg.querySelectorAll('.conn-prereq').forEach(path => {
-    if (path.dataset.from === id || path.dataset.to === id) {
-      path.classList.add('conn-highlight');
+  svg.querySelectorAll('[data-from][data-to]').forEach(el => {
+    if (el.dataset.from === id || el.dataset.to === id) {
+      el.classList.add('conn-highlight');
     }
   });
 }
