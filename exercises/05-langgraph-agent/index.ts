@@ -122,7 +122,7 @@ async function partB() {
     if (SLOW_MODE) await delay(CHUNK_DELAY_MS);
 
     // Only process AI message chunks (skip tool messages emitted by the tools node)
-    if (message._getType() === "ai") {
+    if (message.type === "ai") {
       // Text content — stream it live (same as exercise 04 Part A)
       if (typeof message.content === "string" && message.content.length > 0) {
         process.stdout.write(message.content);
