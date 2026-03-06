@@ -185,20 +185,35 @@ async function partC() {
   console.log();
 }
 
-// TODO(human): Part D — streamMode: "updates"
-// Implement a Part D that uses streamMode: "updates" instead of "messages".
-// This mode yields the graph state after each node execution, letting you
-// observe the agent's step-by-step progression through the graph.
-//
-// Your task:
-// 1. Create the agent (same as Part B)
-// 2. Use agent.stream({ messages: [...] }, { streamMode: "updates" })
-// 3. Each iteration yields an object like { model_request: { messages: [...] } }
-//    or { tools: { messages: [...] } } — the key is the node name
-// 4. Log each step: which node ran, what messages it produced
-//
-// This reveals the graph structure: you'll see "model_request" → "tools" → "model_request" → END
-// which maps to the conditional edge logic described in the README.
+// --- Part D: streamMode: "updates" — observe the graph step by step ---
+async function partD() {
+  console.log("=== Part D: streamMode: 'updates' ===\n");
+
+  const agent = createAgent({ model, tools });
+
+  const userMessage = new HumanMessage("What's the weather in Bali in July?");
+
+  const stream = await agent.stream({ messages: [userMessage] }, { streamMode: "updates" });
+
+  for await (const update of stream) {
+    if (SLOW_MODE) await delay(CHUNK_DELAY_MS);
+    if (update.model_request) {
+      console.log("model_request");
+      console.log(update.model_request.messages.map((m) => {
+        if (m.type === "human") return `[human] ${m.content}`;
+        if (m.type === "ai" && "tool_calls" in m && (m.tool_calls as unknown[])?.length) return `[ai → tool_calls] ${(m.tool_calls as { name: string; args: Record<string, unknown> }[]).map((tc) => `${tc.name}(${JSON.stringify(tc.args)})`).join(", ")}`;
+        if (m.type === "tool") return `[tool result] ${m.content}`;
+        if (m.type === "ai") return `[ai → final] ${m.content}`;
+        return m.content;
+      }).join("\n"));
+    }
+    if (update.tools) {
+      console.log("tools");
+      console.log(update.tools.messages.map((m) => m.content).join("\n"));
+    }
+    console.log();
+  }
+}
 
 // Run a specific part with: npx tsx index.ts A (or B, C). No arg = run all.
 const partFilter = process.argv[2]?.toUpperCase();
@@ -207,7 +222,7 @@ async function main() {
   if (!partFilter || partFilter === "A") await partA();
   if (!partFilter || partFilter === "B") await partB();
   if (!partFilter || partFilter === "C") await partC();
-  // if (!partFilter || partFilter === "D") await partD();
+  if (!partFilter || partFilter === "D") await partD();
 }
 
 main();
