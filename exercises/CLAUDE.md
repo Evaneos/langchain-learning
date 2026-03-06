@@ -36,7 +36,7 @@ Quand un concept d'un exercice précédent est **observable** dans l'exercice co
 
 ## Learning Map
 
-Avant le commit de création (étape 4), mettre à jour le noeud dans `docs/learning-map.html` :
+Avant le commit de création (étape 4), mettre à jour le noeud dans `docs/learning-map-data.js` :
 
 ### Données du noeud
 
