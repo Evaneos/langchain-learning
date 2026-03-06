@@ -25,9 +25,15 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 ## Code conventions
 
 - All code in English
+- README.md files in French
 - Each exercise should be runnable independently
 - Use `dotenv` to load env vars from project root `.env` / `.env.local`
 - When referencing di-agent-ui, use relative paths from this repo root (`../evaneos/di-agent-ui/`)
+
+## Git workflow for exercises
+
+- **Commit 1** — when the exercise is created (skeleton with `TODO(human)` placeholder)
+- **Commit 2** — when the exercise is completed (after human fills in the TODO)
 
 ## Key context about di-agent-ui
 

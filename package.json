@@ -1,0 +1,33 @@
+{
+  "name": "langchain-learning",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/langchain": "^1.0.101",
+    "@ai-sdk/react": "^2.0.101",
+    "@langchain/anthropic": "^1.3.21",
+    "@langchain/core": "^1.1.29",
+    "@langchain/langgraph": "^1.2.0",
+    "@langchain/langgraph-checkpoint": "^0.1.0",
+    "ai": "^5.0.102",
+    "deepagents": "^1.8.0",
+    "dotenv": "^16.4.7",
+    "langchain": "^1.2.25",
+    "next": "^16.1.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}
