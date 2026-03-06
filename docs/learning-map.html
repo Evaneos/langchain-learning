@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain Learning — Skill Tree</title>
+<style>
+  :root {
+    --bg-deep: #0a0e17;
+    --bg-surface: #111827;
+    --bg-card: #1a2332;
+    --bg-card-hover: #1f2b3d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --lc-glow: #34d399;
+    --lc-bg: rgba(52, 211, 153, 0.08);
+    --lc-border: rgba(52, 211, 153, 0.3);
+    --lc-line: rgba(52, 211, 153, 0.45);
+    --lc-label: #6ee7b7;
+    --lg-glow: #38bdf8;
+    --lg-bg: rgba(56, 189, 248, 0.06);
+    --lg-border: rgba(56, 189, 248, 0.25);
+    --lg-line: rgba(56, 189, 248, 0.4);
+    --lg-label: #7dd3fc;
+    --da-glow: #fb923c;
+    --da-bg: rgba(251, 146, 60, 0.06);
+    --da-border: rgba(251, 146, 60, 0.25);
+    --da-line: rgba(251, 146, 60, 0.4);
+    --da-label: #fdba74;
+    --shared-glow: #a78bfa;
+    --node-future-opacity: 0.35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Avenir Next', 'Avenir', -apple-system, 'Segoe UI', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 800px 400px at 30% 20%, rgba(52, 211, 153, 0.04), transparent),
+      radial-gradient(ellipse 600px 500px at 70% 50%, rgba(56, 189, 248, 0.03), transparent),
+      radial-gradient(ellipse 500px 400px at 50% 85%, rgba(251, 146, 60, 0.03), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 48px 24px 16px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--lc-glow), var(--lg-glow), var(--da-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 16px 24px 8px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: default;
+  }
+
+  .legend-item[data-layer] {
+    cursor: help;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .legend-item[data-layer]:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-primary);
+  }
+
+  .legend-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: 280px;
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 14px 16px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 200;
+  }
+
+  .legend-item[data-layer]:hover .legend-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .legend-tooltip-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .legend-tooltip-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .legend-tooltip-desc strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .legend-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(255,255,255,0.1);
+  }
+
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .legend-line {
+    width: 28px;
+    height: 2px;
+    border-radius: 1px;
+  }
+
+  /* ── SVG ── */
+  .connections-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  .conn-prereq {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    transition: stroke-width 0.2s, filter 0.2s;
+  }
+
+  .conn-highlight {
+    stroke-width: 2.5 !important;
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+
+  /* ── TREE CONTAINER ── */
+  .tree-container {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 48px 100px;
+  }
+
+  /* ── LAYER ── */
+  .layer {
+    position: relative;
+    margin-bottom: 200px;
+  }
+
+  .layer:last-child {
+    margin-bottom: 0;
+  }
+
+  .layer-label {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 6px;
+    margin-bottom: 28px;
+  }
+
+  .layer-label-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .layer-tagline {
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    opacity: 0.7;
+    line-height: 1.4;
+  }
+
+  .layer--lc .layer-label { color: var(--lc-label); background: var(--lc-bg); border: 1px solid var(--lc-border); }
+  .layer--lg .layer-label { color: var(--lg-label); background: var(--lg-bg); border: 1px solid var(--lg-border); }
+  .layer--da .layer-label { color: var(--da-label); background: var(--da-bg); border: 1px solid var(--da-border); }
+
+  /* LangChain: 2x2 grid — gives room for diagonal connections */
+  .layer--lc .layer-nodes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px 160px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* LangGraph: single row of 4 */
+  .layer--lg .layer-nodes {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+  }
+
+  /* DeepAgents: centered pair */
+  .layer--da .layer-nodes {
+    display: flex;
+    justify-content: center;
+    gap: 140px;
+  }
+
+  /* ── NODE ── */
+  .node {
+    position: relative;
+    width: 200px;
+    min-height: 100px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .node:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-3px);
+    z-index: 10;
+  }
+
+  .node--done {
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .node--done::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--glow-color), transparent 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+
+  .node--done:hover::before { opacity: 1; }
+
+  .node--done::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    box-shadow: 0 0 30px -5px var(--glow-color);
+    opacity: 0.12;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .node--done:hover::after { opacity: 0.28; }
+
+  .node--future {
+    opacity: var(--node-future-opacity);
+    border-style: dashed;
+    border-color: rgba(255,255,255,0.06);
+  }
+
+  .node--future:hover { opacity: 0.6; }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .node-number {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .layer--lc .node-number { background: var(--lc-bg); color: var(--lc-label); border: 1px solid var(--lc-border); }
+  .layer--lg .node-number { background: var(--lg-bg); color: var(--lg-label); border: 1px solid var(--lg-border); }
+  .layer--da .node-number { background: var(--da-bg); color: var(--da-label); border: 1px solid var(--da-border); }
+
+  .node-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .node-status--done {
+    background: var(--glow-color);
+    box-shadow: 0 0 8px var(--glow-color);
+  }
+
+  .node-status--future {
+    border: 1.5px solid var(--text-muted);
+    background: transparent;
+  }
+
+  .node-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  .node--future .node-title { color: var(--text-secondary); }
+
+  .node-concepts {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .node--done .node-concepts { color: var(--text-secondary); }
+
+  /* ── TOOLTIP ── */
+  .tooltip {
+    position: fixed;
+    z-index: 200;
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px 16px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s, transform 0.2s;
+    max-width: 320px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+
+  .tooltip--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .tooltip-apis-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .tooltip-apis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 14, 23, 0.97);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 0;
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 320px;
+    overflow-y: auto;
+    backdrop-filter: blur(24px);
+  }
+
+  .detail-panel--visible { transform: translateY(0); }
+
+  /* Animated top border glow — color set via JS inline style */
+  .detail-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--panel-accent, rgba(255,255,255,0.1));
+    opacity: 0.7;
+  }
+
+  .detail-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--panel-accent-bg, transparent), transparent);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .detail-inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0 32px;
+    padding: 24px 40px 28px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .detail-divider {
+    background: rgba(255,255,255,0.06);
+    align-self: stretch;
+  }
+
+  .detail-panel-close {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    z-index: 10;
+  }
+
+  .detail-panel-close:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  /* Left column: identity */
+  .detail-left { display: flex; flex-direction: column; gap: 16px; }
+
+  .detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .detail-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-family: 'Avenir Next', 'Avenir', -apple-system, sans-serif;
+    opacity: 0.25;
+    flex-shrink: 0;
+    min-width: 48px;
+  }
+
+  .detail-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 2px;
+  }
+
+  .detail-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .detail-layer-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .detail-status-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .detail-status-badge--done {
+    background: rgba(52, 211, 153, 0.12);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+  }
+
+  .detail-status-badge--future {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Progress dots — mini map of all exercises */
+  .detail-progress {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 0 0;
+  }
+
+  .detail-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  .detail-progress-dot--done {
+    background: rgba(255,255,255,0.15);
+  }
+
+  .detail-progress-dot--future {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .detail-progress-dot--current {
+    transform: scaleY(1.6);
+    border-radius: 2px;
+  }
+
+  /* Shared concepts — shown as inline bridge markers */
+  .detail-bridges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 2px;
+  }
+
+  .detail-bridge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--shared-glow);
+    background: rgba(167, 139, 250, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.15);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  .detail-bridge-arrow {
+    color: rgba(167, 139, 250, 0.4);
+    font-size: 0.6rem;
+  }
+
+  .detail-bridge-target {
+    font-weight: 700;
+    font-size: 0.6rem;
+    opacity: 0.7;
+  }
+
+  /* Key insights — aha moments */
+  .detail-insights {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .detail-insight {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    padding: 7px 0 7px 12px;
+    border-left: 2px solid var(--panel-accent, rgba(255,255,255,0.15));
+    font-style: italic;
+    transition: border-color 0.3s;
+  }
+
+  .detail-insight strong {
+    color: var(--text-primary);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .detail-insight code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-style: normal;
+  }
+
+  /* Right column: technical details */
+  .detail-right { display: flex; flex-direction: column; gap: 14px; }
+
+  .detail-section { margin: 0; }
+
+  .detail-section-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .detail-apis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .api-tag {
+    font-size: 0.72rem;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+
+  .api-tag:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    color: var(--text-primary);
+  }
+
+  .api-tag--active {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.2) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* ── API INSPECT VIEW (replaces right column on click) ── */
+  .api-inspect {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .api-inspect-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    transition: color 0.15s;
+    align-self: flex-start;
+  }
+
+  .api-inspect-back:hover { color: var(--text-secondary); }
+
+  .api-inspect-name {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .api-inspect-from {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 4px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+
+  .api-inspect-detail {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-family: 'Avenir Next', 'Avenir', -apple-system, sans-serif;
+  }
+
+  .api-inspect-detail code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.73rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text-primary);
+  }
+
+  .api-inspect-signature {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 5px;
+    padding: 8px 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  .detail-prereqs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .detail-prereq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .detail-prereq-chip:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text-primary);
+  }
+
+  .detail-prereq-num {
+    font-weight: 700;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    opacity: 0.5;
+  }
+
+  /* Future exercise: locked state */
+  .detail-locked-msg {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding: 4px 0;
+  }
+
+  .detail-locked-msg strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  /* Entrance stagger for detail content */
+  @keyframes detailFadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-left, .detail-right {
+    animation: detailFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .detail-right { animation-delay: 0.06s; }
+
+  /* ── ENTRANCE ANIMATION ── */
+  @keyframes nodeAppear {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .node { animation: nodeAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards; }
+
+  @keyframes drawLine {
+    from { stroke-dashoffset: 1000; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .conn-prereq {
+    stroke-dasharray: 1000;
+    animation: drawLine 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .layer--lc .layer-nodes { max-width: 440px; gap: 40px 80px; }
+    .layer--lg .layer-nodes { flex-wrap: wrap; gap: 24px; }
+    .node { width: 160px; min-height: 85px; }
+    .header h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LangChain Learning Path</h1>
+  <p>Skill tree — hover for APIs, click for details</p>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="tree-container" id="treeContainer"></div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="detail-panel" id="detailPanel">
+  <button class="detail-panel-close" id="detailClose" aria-label="Close">&times;</button>
+  <div class="detail-inner" id="detailContent"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+const EXERCISES = [
+  {
+    id: '01', title: 'Hello LLM', layer: 'lc', done: true,
+    concepts: 'invoke, messages, metadata',
+    insights: [
+      '<strong>ChatAnthropic, ChatOpenAI, ChatGoogle</strong> — same interface. Learn <code>.invoke()</code> once, switch providers with one line.',
+      '<code>stop_reason</code> is the model\'s signal to you: <strong>"end_turn"</strong> = I\'m done talking. <strong>"tool_use"</strong> = your turn to act. <strong>"max_tokens"</strong> = I got cut off mid-sentence.'
+    ],
+    apis: [
+      { name: 'ChatAnthropic',
+        from: '@langchain/anthropic',
+        detail: 'The main entry point. Wraps the Anthropic API into LangChain\'s <code>BaseChatModel</code> interface. You configure <code>model</code>, <code>temperature</code>, <code>maxTokens</code> here. Once created, it exposes <code>.invoke()</code>, <code>.stream()</code>, <code>.bindTools()</code> — the same interface works for OpenAI, Gemini, etc.' },
+      { name: 'HumanMessage',
+        from: '@langchain/core/messages',
+        detail: 'Represents what the user says. The model reads this as "the human is asking me X." In multi-turn conversations, you alternate <code>HumanMessage</code> and <code>AIMessage</code> in the messages array.' },
+      { name: 'SystemMessage',
+        from: '@langchain/core/messages',
+        detail: 'Invisible to the user, visible to the model. Sets persona, rules, and constraints. Placed first in the messages array. In di-agent-ui, this is where skills inject their behavioral instructions.' },
+      { name: 'AIMessage',
+        from: '@langchain/core/messages',
+        detail: 'What you get back from <code>.invoke()</code>. Beyond <code>.content</code> (the text), it carries <code>.response_metadata</code> (stop reason, model ID) and <code>.usage_metadata</code> (token counts). When tools are bound, it may also contain <code>.tool_calls</code> instead of text.' },
+      { name: '.invoke()',
+        from: 'BaseChatModel',
+        signature: 'model.invoke(messages: BaseMessage[]): Promise<AIMessage>',
+        detail: 'The synchronous call pattern — sends all messages, waits for the full response. Simple but blocking. For real-time UX, you\'ll switch to <code>.stream()</code> in exercise 04. Returns a single <code>AIMessage</code>.' },
+      { name: 'response_metadata',
+        from: 'AIMessage',
+        detail: 'Provider-specific data attached to the response. For Anthropic: <code>stop_reason</code> ("end_turn", "tool_use", "max_tokens"), the model ID, and raw usage. <code>stop_reason</code> is key — it tells you WHY the model stopped, which changes meaning in exercises 03 and 04.' },
+      { name: 'usage_metadata',
+        from: 'AIMessage',
+        detail: 'Normalized token counts: <code>input_tokens</code>, <code>output_tokens</code>, <code>total_tokens</code>. Useful for cost tracking. Unlike <code>response_metadata</code>, this format is consistent across all LangChain providers.' }
+    ],
+    prereqs: [],
+    shared: [
+      { concept: 'stop_reason', targets: ['03', '04'] },
+      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08'] }
+    ]
+  },
+  {
+    id: '02', title: 'Structured Output', layer: 'lc', done: true,
+    concepts: 'structured output, Zod schemas',
+    insights: [
+      'Structured output <strong>IS</strong> tool calling in disguise. <code>.withStructuredOutput()</code> converts your Zod schema into a hidden tool the model "calls" to produce JSON.',
+      '<code>.describe()</code> is a prompt, not documentation. It\'s the single biggest lever you have on output quality — per field.'
+    ],
+    apis: [
+      { name: '.withStructuredOutput()',
+        from: 'BaseChatModel',
+        signature: 'model.withStructuredOutput(schema: ZodObject): Runnable',
+        detail: 'Returns a new model instance that forces JSON output matching your Zod schema. Under the hood, it uses Anthropic\'s tool_use mode — the schema becomes a "tool" and the model "calls" it with structured data. The result is a plain JS object, not an <code>AIMessage</code>.' },
+      { name: 'z.object()',
+        from: 'zod',
+        signature: 'z.object({ field: z.string(), ... })',
+        detail: 'Zod is the schema library LangChain uses everywhere. <code>z.object()</code> defines the shape of your expected output. Each field can be <code>z.string()</code>, <code>z.number()</code>, <code>z.enum()</code>, <code>z.array()</code>, etc. These same schemas are reused in exercise 03 to define tool arguments.' },
+      { name: '.describe()',
+        from: 'zod',
+        signature: 'z.string().describe("explanation for the model")',
+        detail: 'Critical for quality. The description string is sent to the model as the field\'s "purpose" — it\'s your main lever to guide what the model puts in each field. A vague <code>.describe("name")</code> gives worse results than <code>.describe("The traveler\'s full name as they\'d like to be addressed")</code>. Think of it as a mini-prompt per field.' }
+    ],
+    prereqs: ['01'],
+    shared: [{ concept: 'Zod schemas', targets: ['03'] }]
+  },
+  {
+    id: '03', title: 'Tools', layer: 'lc', done: true,
+    concepts: 'tools, tool calls, manual dispatch',
+    insights: [
+      'The model <strong>never executes anything</strong>. <code>tool_calls</code> is a polite request — YOU run the function, then report back with <code>ToolMessage</code>.',
+      'The entire "agent loop" is just: invoke &rarr; check <code>tool_calls</code> &rarr; execute &rarr; <code>ToolMessage</code> &rarr; invoke again. <code>createAgent</code> just automates this cycle.'
+    ],
+    apis: [
+      { name: 'tool()',
+        from: '@langchain/core/tools',
+        signature: 'tool(fn, { name, description, schema })',
+        detail: 'Declares a function the model can request to call. The <code>schema</code> is a Zod object (same as exercise 02) that defines the arguments. The <code>description</code> tells the model WHEN to use this tool — like <code>.describe()</code>, writing a precise description is crucial. The function itself runs on YOUR server, not in the model.' },
+      { name: '.bindTools()',
+        from: 'BaseChatModel',
+        signature: 'model.bindTools(tools: ToolDefinition[])',
+        detail: 'Attaches tools to the model so it knows what\'s available. Returns a new model instance. After binding, calling <code>.invoke()</code> may return <code>tool_calls</code> instead of text — the model decides whether to use a tool or answer directly. You can bind, unbind, rebind tools at any time.' },
+      { name: 'tool_calls',
+        from: 'AIMessage',
+        detail: 'Array on <code>AIMessage</code> when the model wants to call tools. Each entry has <code>name</code> (which tool), <code>args</code> (parsed from the schema), and <code>id</code> (to match the response). When this array exists, <code>response_metadata.stop_reason</code> switches from <code>"end_turn"</code> to <code>"tool_use"</code>.' },
+      { name: 'ToolMessage',
+        from: '@langchain/core/messages',
+        signature: 'new ToolMessage({ content, tool_call_id })',
+        detail: 'You execute the tool yourself, then wrap the result in a <code>ToolMessage</code> and send it back to the model. The model reads this result and decides what to do next — answer the user, or call another tool. This is the "manual dispatch" loop that <code>createAgent</code> automates in exercise 05.' },
+      { name: 'tool_call_id',
+        from: 'ToolMessage',
+        detail: 'Links a <code>ToolMessage</code> response back to the specific <code>tool_call</code> that triggered it. Required by the API — without it, the model can\'t match which result corresponds to which tool request. Copy it from <code>toolCall.id</code>.' }
+    ],
+    prereqs: ['01', '02'],
+    shared: [{ concept: 'tool loop', targets: ['04', '05'] }]
+  },
+  {
+    id: '04', title: 'Streaming', layer: 'lc', done: true,
+    concepts: 'streaming, chunks, for await',
+    insights: [
+      'Streaming changes <strong>when</strong>, not <strong>what</strong>. The same <code>AIMessage</code> arrives — just time-sliced into chunks.',
+      'Tool call args arrive as <strong>JSON fragments</strong> across chunks. You can\'t parse mid-stream — accumulate the raw strings, parse once at the end.'
+    ],
+    apis: [
+      { name: '.stream()',
+        from: 'BaseChatModel',
+        signature: 'model.stream(messages): AsyncIterable<AIMessageChunk>',
+        detail: 'The streaming equivalent of <code>.invoke()</code>. Instead of waiting for the full response, you get an async iterator that yields <code>AIMessageChunk</code> objects as the model generates tokens. Each chunk has partial <code>.content</code>. Concatenate them for the full message. In di-agent-ui, this feeds into <code>parseLangChainStream()</code>.' },
+      { name: 'AIMessageChunk',
+        from: '@langchain/core/messages',
+        detail: 'One piece of a streaming response. Has <code>.content</code> (partial text), <code>.tool_call_chunks</code> (partial tool calls), and <code>.response_metadata</code> (only populated on the final chunk). You can\'t just read <code>.content</code> — you need to accumulate chunks and handle tool call fragments separately.' },
+      { name: 'tool_call_chunks',
+        from: 'AIMessageChunk',
+        detail: 'When streaming a tool call, the name and JSON args arrive in fragments across multiple chunks. Each <code>tool_call_chunk</code> has partial <code>name</code> and <code>args</code> (as raw string, not parsed). You concatenate the <code>args</code> strings across chunks, then <code>JSON.parse()</code> the result when the stream ends.' },
+      { name: 'additional_kwargs',
+        from: 'AIMessageChunk',
+        detail: 'Raw provider-specific data on each chunk. For Anthropic, this is how you detect that a tool call is starting before the <code>tool_call_chunks</code> array is populated. Useful for building UIs that show "calling tool X..." while args are still streaming in.' },
+      { name: 'for await...of',
+        from: 'JavaScript',
+        detail: 'The native JS pattern for consuming async iterables. <code>for await (const chunk of stream) { ... }</code> processes each chunk as it arrives. You can <code>break</code> out early to cancel the stream. This is what makes real-time UX possible — you update the UI inside the loop body.' }
+    ],
+    prereqs: ['01', '03'],
+    shared: [{ concept: 'streaming', targets: ['10'] }]
+  },
+  {
+    id: '05', title: 'createAgent', layer: 'lg', done: true,
+    concepts: 'react agent, auto tool loop, streamMode',
+    insights: [
+      'An "agent" is not a new abstraction — it\'s the manual tool loop from exercise 03, automated as a <strong>2-node graph</strong> with one conditional edge.',
+      '<code>streamMode: "messages"</code> gives you the same <code>AIMessageChunk</code>s from exercise 04, but the graph handles re-invocation between tool calls. You stream the whole multi-turn conversation, not just one response.'
+    ],
+    apis: [
+      { name: 'createAgent',
+        from: 'langchain',
+        signature: 'createAgent({ model, tools, systemPrompt? })',
+        detail: 'Builds a LangGraph <code>StateGraph</code> with 2 nodes: "model_request" (calls the LLM) and "tools" (dispatches tool calls). A conditional edge loops back to "model_request" if the LLM returns <code>tool_calls</code>, or routes to END if it returns text. This replaces the entire manual loop from exercises 03/04. Previously <code>createReactAgent</code> from <code>@langchain/langgraph/prebuilt</code> (now deprecated). In di-agent-ui, <code>createDeepAgent()</code> wraps this with skills and store.' },
+      { name: 'agent.invoke()',
+        from: 'ReactAgent',
+        signature: 'agent.invoke({ messages }): Promise<{ messages: BaseMessage[] }>',
+        detail: 'Runs the graph to completion — it loops internally until the LLM stops requesting tools. Returns <code>{ messages }</code> containing the full conversation: <code>[HumanMessage, AIMessage(tool_calls), ToolMessage, ..., AIMessage(final)]</code>. Compare with exercise 03 where you built this array manually.' },
+      { name: 'agent.stream()',
+        from: 'ReactAgent',
+        signature: 'agent.stream({ messages }, { streamMode })',
+        detail: 'Streams through the entire agent loop. With <code>streamMode: "messages"</code>, yields <code>[message, metadata]</code> tuples — the same <code>AIMessageChunk</code>s as <code>model.stream()</code> in exercise 04, but across the full multi-turn conversation. This is the exact pattern used in di-agent-ui\'s <code>agent-invoker.ts</code>.' },
+      { name: 'streamMode',
+        from: 'ReactAgent',
+        detail: 'Controls what the stream yields. <code>"messages"</code> = raw message chunks (for real-time UX). <code>"updates"</code> = graph state after each node execution (for debugging/observing step-by-step). <code>"values"</code> = full state snapshot after each step.' },
+      { name: 'langgraph_node',
+        from: 'StreamMetadata',
+        detail: 'In <code>streamMode: "messages"</code>, each tuple includes <code>metadata.langgraph_node</code> telling you which graph node emitted the chunk ("model_request" or "tools"). Lets you distinguish LLM-generated content from tool execution results in the stream.' },
+      { name: 'systemPrompt',
+        from: 'createAgent options',
+        detail: 'A string or <code>SystemMessage</code> injected at the start of every conversation. In di-agent-ui, this is the massive system prompt built from skills + context. Passed as a string, the agent wraps it in <code>SystemMessage</code> internally. Previously called <code>prompt</code> in the deprecated <code>createReactAgent</code> API.' }
+    ],
+    prereqs: ['03', '04'],
+    shared: [{ concept: 'agent graph', targets: ['06', '09'] }]
+  },
+  {
+    id: '06', title: 'StateGraph', layer: 'lg', done: false,
+    concepts: 'state graph, nodes, edges',
+    apis: [], prereqs: ['05'], shared: []
+  },
+  {
+    id: '07', title: 'Checkpointing', layer: 'lg', done: false,
+    concepts: 'memory, persistence, replay',
+    apis: [], prereqs: ['06'], shared: []
+  },
+  {
+    id: '08', title: 'Human-in-the-loop', layer: 'lg', done: false,
+    concepts: 'interrupts, approval, review',
+    apis: [], prereqs: ['07'], shared: []
+  },
+  {
+    id: '09', title: 'DeepAgents', layer: 'da', done: false,
+    concepts: 'skills, deep agent, store',
+    apis: [], prereqs: ['05'], shared: []
+  },
+  {
+    id: '10', title: 'Vercel AI SDK', layer: 'da', done: false,
+    concepts: 'useChat, streaming UI',
+    apis: [], prereqs: ['04', '05'], shared: []
+  }
+];
+
+const LAYER_META = {
+  lc: {
+    label: 'LangChain',
+    className: 'layer--lc',
+    glowColor: 'var(--lc-glow)',
+    lineColor: 'var(--lc-line)',
+    tagline: 'SDK for LLM interaction — models, messages, tools',
+    tooltip: '<strong>LangChain</strong> is the foundational SDK. It provides a unified interface to call any LLM (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>…), structure inputs/outputs with schemas, and define tools. Think of it as the <strong>building blocks</strong>: you write each step yourself.'
+  },
+  lg: {
+    label: 'LangGraph',
+    className: 'layer--lg',
+    glowColor: 'var(--lg-glow)',
+    lineColor: 'var(--lg-line)',
+    tagline: 'Orchestration framework — graphs, state, agent loops',
+    tooltip: '<strong>LangGraph</strong> sits on top of LangChain. It orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop. You gain control over flow, memory, and human-in-the-loop.'
+  },
+  da: {
+    label: 'DeepAgents / Vercel AI',
+    className: 'layer--da',
+    glowColor: 'var(--da-glow)',
+    lineColor: 'var(--da-line)',
+    tagline: 'High-level wrappers — opinionated agents & streaming UI',
+    tooltip: '<strong>DeepAgents</strong> wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. <strong>Vercel AI SDK</strong> handles the frontend: <code>useChat()</code> for streaming UI, bridging the LangChain stream to React.'
+  }
+};
+
+// ════════════════════════════════════════════════════════════
+// RENDER DOM
+// ════════════════════════════════════════════════════════════
+const container = document.getElementById('treeContainer');
+const tooltip = document.getElementById('tooltip');
+const detailPanel = document.getElementById('detailPanel');
+const detailContent = document.getElementById('detailContent');
+const detailClose = document.getElementById('detailClose');
+const legendEl = document.getElementById('legend');
+
+// ── Render legend with hover tooltips ──
+const LEGEND_ITEMS = [
+  { layer: 'lc', range: '01-04' },
+  { layer: 'lg', range: '05-08' },
+  { layer: 'da', range: '09-10' }
+];
+
+LEGEND_ITEMS.forEach(({ layer, range }) => {
+  const meta = LAYER_META[layer];
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.dataset.layer = layer;
+  item.innerHTML = `
+    <div class="legend-swatch" style="background: ${meta.glowColor}"></div>
+    ${meta.label} (${range})
+    <div class="legend-tooltip">
+      <div class="legend-tooltip-desc">${meta.tooltip}</div>
+    </div>
+  `;
+  legendEl.appendChild(item);
+});
+
+// Static "Prerequisite" legend item
+const prereqItem = document.createElement('div');
+prereqItem.className = 'legend-item';
+prereqItem.innerHTML = `<div class="legend-line" style="background: var(--lc-glow); opacity: 0.5"></div> Prerequisite`;
+legendEl.appendChild(prereqItem);
+
+const layerOrder = ['lc', 'lg', 'da'];
+
+layerOrder.forEach((layerId, layerIdx) => {
+  const exercises = EXERCISES.filter(e => e.layer === layerId);
+  if (!exercises.length) return;
+  const meta = LAYER_META[layerId];
+
+  const layerEl = document.createElement('div');
+  layerEl.className = `layer ${meta.className}`;
+
+  const label = document.createElement('div');
+  label.className = 'layer-label';
+  label.innerHTML = `
+    <span class="layer-label-name">${meta.label}</span>
+    <span class="layer-tagline">${meta.tagline}</span>
+  `;
+  layerEl.appendChild(label);
+
+  const nodesContainer = document.createElement('div');
+  nodesContainer.className = 'layer-nodes';
+
+  exercises.forEach((ex, nodeIdx) => {
+    const node = document.createElement('div');
+    node.className = `node ${ex.done ? 'node--done' : 'node--future'}`;
+    node.dataset.id = ex.id;
+    node.style.setProperty('--glow-color', meta.glowColor);
+    node.style.animationDelay = `${layerIdx * 0.2 + nodeIdx * 0.1}s`;
+
+    node.innerHTML = `
+      <div class="node-header">
+        <span class="node-number">${ex.id}</span>
+        <span class="node-status ${ex.done ? 'node-status--done' : 'node-status--future'}"></span>
+      </div>
+      <div class="node-title">${ex.title}</div>
+      <div class="node-concepts">${ex.concepts}</div>
+    `;
+
+    node.addEventListener('mouseenter', (e) => showTooltip(e, ex));
+    node.addEventListener('mouseleave', hideTooltip);
+    node.addEventListener('click', () => showDetail(ex, meta));
+
+    nodesContainer.appendChild(node);
+  });
+
+  layerEl.appendChild(nodesContainer);
+  container.appendChild(layerEl);
+});
+
+// ════════════════════════════════════════════════════════════
+// SVG CONNECTIONS — smart routing
+// ════════════════════════════════════════════════════════════
+function createSVG() {
+  const old = container.querySelector('.connections-svg');
+  if (old) old.remove();
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('connections-svg');
+  const rect = container.getBoundingClientRect();
+  svg.setAttribute('width', rect.width);
+  svg.setAttribute('height', rect.height);
+  svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+  container.prepend(svg);
+
+  const cr = container.getBoundingClientRect();
+
+  function getEdge(id, side) {
+    const el = container.querySelector(`[data-id="${id}"]`);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const x = r.left - cr.left;
+    const y = r.top - cr.top;
+    const w = r.width;
+    const h = r.height;
+    switch (side) {
+      case 'top':    return { x: x + w / 2, y };
+      case 'bottom': return { x: x + w / 2, y: y + h };
+      case 'left':   return { x, y: y + h / 2 };
+      case 'right':  return { x: x + w, y: y + h / 2 };
+    }
+  }
+
+  function getNodeRect(id) {
+    const el = container.querySelector(`[data-id="${id}"]`);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      left: r.left - cr.left,
+      top: r.top - cr.top,
+      right: r.right - cr.left,
+      bottom: r.bottom - cr.top,
+      cx: r.left - cr.left + r.width / 2,
+      cy: r.top - cr.top + r.height / 2,
+      width: r.width,
+      height: r.height
+    };
+  }
+
+  function routeLine(fromId, toId) {
+    const fr = getNodeRect(fromId);
+    const tr = getNodeRect(toId);
+    if (!fr || !tr) return null;
+
+    // Same row? Check vertical overlap
+    const sameRow = !(fr.bottom < tr.top - 10 || tr.bottom < fr.top - 10);
+
+    if (sameRow) {
+      // Horizontal connection: right edge → left edge
+      const goingRight = fr.cx < tr.cx;
+      const from = getEdge(fromId, goingRight ? 'right' : 'left');
+      const to = getEdge(toId, goingRight ? 'left' : 'right');
+      const dist = Math.abs(to.x - from.x);
+      const cp = dist * 0.35;
+      return `M ${from.x} ${from.y} C ${from.x + (goingRight ? cp : -cp)} ${from.y}, ${to.x + (goingRight ? -cp : cp)} ${to.y}, ${to.x} ${to.y}`;
+    } else {
+      // Vertical / diagonal connection: bottom → top
+      const from = getEdge(fromId, 'bottom');
+      const to = getEdge(toId, 'top');
+      const dy = to.y - from.y;
+      const cp = Math.max(dy * 0.45, 40);
+      return `M ${from.x} ${from.y} C ${from.x} ${from.y + cp}, ${to.x} ${to.y - cp}, ${to.x} ${to.y}`;
+    }
+  }
+
+  // Draw prerequisite lines
+  EXERCISES.forEach((ex, i) => {
+    ex.prereqs.forEach(prereqId => {
+      const d = routeLine(prereqId, ex.id);
+      if (!d) return;
+
+      const sourceEx = EXERCISES.find(e => e.id === prereqId);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.classList.add('conn-prereq');
+      path.style.stroke = LAYER_META[sourceEx.layer].lineColor;
+      path.style.animationDelay = `${0.3 + i * 0.08}s`;
+      path.dataset.from = prereqId;
+      path.dataset.to = ex.id;
+      svg.appendChild(path);
+    });
+  });
+}
+
+createSVG();
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(createSVG, 150);
+});
+setTimeout(createSVG, 600);
+
+// ════════════════════════════════════════════════════════════
+// TOOLTIP (hover)
+// ════════════════════════════════════════════════════════════
+function showTooltip(event, ex) {
+  if (!ex.apis.length) { tooltip.classList.remove('tooltip--visible'); return; }
+
+  tooltip.innerHTML = `
+    <div class="tooltip-apis-label">Key APIs</div>
+    <div class="tooltip-apis">${ex.apis.map(a => `<span class="api-tag">${typeof a === 'string' ? a : a.name}</span>`).join('')}</div>
+  `;
+  tooltip.classList.add('tooltip--visible');
+
+  const nr = event.currentTarget.getBoundingClientRect();
+  tooltip.style.left = '0px';
+  tooltip.style.top = '0px';
+  const tr = tooltip.getBoundingClientRect();
+
+  let left = nr.left + nr.width / 2 - tr.width / 2;
+  let top = nr.bottom + 10;
+
+  if (left < 8) left = 8;
+  if (left + tr.width > window.innerWidth - 8) left = window.innerWidth - tr.width - 8;
+  if (top + tr.height > window.innerHeight - 8) top = nr.top - tr.height - 10;
+
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+
+  highlightConnections(ex.id);
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('tooltip--visible');
+  clearHighlights();
+}
+
+function highlightConnections(id) {
+  const svg = container.querySelector('.connections-svg');
+  if (!svg) return;
+  svg.querySelectorAll('.conn-prereq').forEach(path => {
+    if (path.dataset.from === id || path.dataset.to === id) {
+      path.classList.add('conn-highlight');
+    }
+  });
+}
+
+function clearHighlights() {
+  const svg = container.querySelector('.connections-svg');
+  if (!svg) return;
+  svg.querySelectorAll('.conn-highlight').forEach(p => p.classList.remove('conn-highlight'));
+}
+
+// ════════════════════════════════════════════════════════════
+// DETAIL PANEL (click)
+// ════════════════════════════════════════════════════════════
+
+// Color mappings for inline styles (CSS vars can't be set dynamically on pseudo-elements easily)
+const LAYER_COLORS = {
+  lc: { accent: '#34d399', accentBg: 'rgba(52, 211, 153, 0.06)', label: '#6ee7b7', bg: 'rgba(52, 211, 153, 0.08)', border: 'rgba(52, 211, 153, 0.25)' },
+  lg: { accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.05)', label: '#7dd3fc', bg: 'rgba(56, 189, 248, 0.06)', border: 'rgba(56, 189, 248, 0.2)' },
+  da: { accent: '#fb923c', accentBg: 'rgba(251, 146, 60, 0.05)', label: '#fdba74', bg: 'rgba(251, 146, 60, 0.06)', border: 'rgba(251, 146, 60, 0.2)' }
+};
+
+// Current detail state — needed for API inspect back navigation
+let currentDetailEx = null;
+let currentDetailLayer = null;
+
+function showDetail(ex, layer) {
+  currentDetailEx = ex;
+  currentDetailLayer = layer;
+  const colors = LAYER_COLORS[ex.layer];
+
+  detailPanel.style.setProperty('--panel-accent', colors.accent);
+  detailPanel.style.setProperty('--panel-accent-bg', colors.accentBg);
+
+  const progressDots = EXERCISES.map(e => {
+    const isCurrent = e.id === ex.id;
+    const dotColor = isCurrent ? colors.accent : (e.done ? 'rgba(255,255,255,0.15)' : undefined);
+    const style = dotColor ? `background:${dotColor};` : '';
+    const cls = `detail-progress-dot ${e.done ? 'detail-progress-dot--done' : 'detail-progress-dot--future'} ${isCurrent ? 'detail-progress-dot--current' : ''}`;
+    return `<div class="${cls}" style="${style}" title="${e.id} — ${e.title}"></div>`;
+  }).join('');
+
+  const bridgesHtml = ex.shared.length > 0
+    ? ex.shared.map(s =>
+        s.targets.map(t =>
+          `<span class="detail-bridge">${s.concept} <span class="detail-bridge-arrow">&rarr;</span> <span class="detail-bridge-target">${t}</span></span>`
+        ).join('')
+      ).join('')
+    : '';
+
+  const leftCol = `
+    <div class="detail-left">
+      <div class="detail-header">
+        <div class="detail-number" style="color:${colors.accent}">${ex.id}</div>
+        <div class="detail-title-group">
+          <div class="detail-title">${ex.title}</div>
+          <div class="detail-meta">
+            <span class="detail-layer-badge" style="background:${colors.bg};color:${colors.label};border:1px solid ${colors.border}">${layer.label}</span>
+            <span class="detail-status-badge ${ex.done ? 'detail-status-badge--done' : 'detail-status-badge--future'}">
+              ${ex.done ? 'Completed' : 'Locked'}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-progress">${progressDots}</div>
+      ${bridgesHtml ? `
+        <div class="detail-section">
+          <div class="detail-section-label">Shared concepts</div>
+          <div class="detail-bridges">${bridgesHtml}</div>
+        </div>
+      ` : ''}
+      ${ex.insights && ex.insights.length ? `
+        <div class="detail-section">
+          <div class="detail-section-label">Key insights</div>
+          <div class="detail-insights">
+            ${ex.insights.map(i => `<div class="detail-insight">${i}</div>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  const rightCol = ex.done ? buildDoneRightCol(ex) : buildFutureRightCol(ex);
+
+  detailContent.innerHTML = `${leftCol}<div class="detail-divider"></div>${rightCol}`;
+  detailPanel.classList.add('detail-panel--visible');
+
+  bindDetailInteractions(ex);
+}
+
+function buildDoneRightCol(ex) {
+  const apisHtml = ex.apis.map((a, i) => {
+    const name = typeof a === 'string' ? a : a.name;
+    const hasDetail = typeof a !== 'string' && a.detail;
+    return `<span class="api-tag${hasDetail ? '' : ''}" ${hasDetail ? `data-api-idx="${i}"` : ''}>${name}</span>`;
+  }).join('');
+
+  const prereqsHtml = ex.prereqs.length > 0
+    ? ex.prereqs.map(pId => {
+        const pEx = EXERCISES.find(e => e.id === pId);
+        return `<span class="detail-prereq-chip" data-navigate="${pId}">
+          <span class="detail-prereq-num">${pId}</span> ${pEx ? pEx.title : pId}
+        </span>`;
+      }).join('')
+    : '<span style="font-size:0.75rem;color:var(--text-muted)">None — starting point</span>';
+
+  return `
+    <div class="detail-right" id="detailRight">
+      <div class="detail-section">
+        <div class="detail-section-label">Key APIs <span style="opacity:0.5;font-weight:400">— click to inspect</span></div>
+        <div class="detail-apis">${apisHtml}</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">Prerequisites</div>
+        <div class="detail-prereqs">${prereqsHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function buildFutureRightCol(ex) {
+  const prereqsHtml = ex.prereqs.map(pId => {
+    const pEx = EXERCISES.find(e => e.id === pId);
+    const done = pEx && pEx.done;
+    const icon = done ? '<span style="color:#34d399">&#10003;</span>' : '<span style="color:var(--text-muted)">&#9675;</span>';
+    return `<span class="detail-prereq-chip" data-navigate="${pId}" style="${done ? 'border-color:rgba(52,211,153,0.2)' : ''}">
+      ${icon} <span class="detail-prereq-num">${pId}</span> ${pEx ? pEx.title : pId}
+    </span>`;
+  }).join('');
+
+  const completedPrereqs = ex.prereqs.filter(pId => { const p = EXERCISES.find(e => e.id === pId); return p && p.done; }).length;
+
+  return `
+    <div class="detail-right" id="detailRight">
+      <div class="detail-section">
+        <div class="detail-locked-msg">
+          Next in the learning path.<br>
+          <strong>${completedPrereqs}/${ex.prereqs.length}</strong> prerequisites completed.
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label">Requires</div>
+        <div class="detail-prereqs">${prereqsHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function showApiInspect(ex, apiIdx) {
+  const api = ex.apis[apiIdx];
+  if (!api || typeof api === 'string') return;
+
+  const rightEl = document.getElementById('detailRight');
+  if (!rightEl) return;
+
+  rightEl.style.animation = 'none';
+  rightEl.offsetHeight; // trigger reflow
+  rightEl.style.animation = 'detailFadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards';
+
+  rightEl.innerHTML = `
+    <div class="api-inspect">
+      <button class="api-inspect-back" id="apiInspectBack">&larr; All APIs</button>
+      <div class="api-inspect-name">${api.name}</div>
+      ${api.from ? `<div class="api-inspect-from">${api.from}</div>` : ''}
+      ${api.signature ? `<div class="api-inspect-signature">${api.signature}</div>` : ''}
+      <div class="api-inspect-detail">${api.detail}</div>
+    </div>
+  `;
+
+  // Highlight the active tag in the left column (if visible in apis list)
+  detailContent.querySelectorAll('.api-tag').forEach(t => t.classList.remove('api-tag--active'));
+  const activeTag = detailContent.querySelector(`[data-api-idx="${apiIdx}"]`);
+  if (activeTag) activeTag.classList.add('api-tag--active');
+
+  document.getElementById('apiInspectBack').addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Restore the right column
+    rightEl.style.animation = 'none';
+    rightEl.offsetHeight;
+    rightEl.style.animation = 'detailFadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards';
+    rightEl.outerHTML = buildDoneRightCol(ex);
+    detailContent.querySelectorAll('.api-tag').forEach(t => t.classList.remove('api-tag--active'));
+    bindDetailInteractions(ex);
+  });
+}
+
+function bindDetailInteractions(ex) {
+  // API tags clickable
+  detailContent.querySelectorAll('[data-api-idx]').forEach(tag => {
+    tag.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showApiInspect(ex, parseInt(tag.dataset.apiIdx));
+    });
+  });
+
+  // Prereq chips navigable
+  detailContent.querySelectorAll('[data-navigate]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = chip.dataset.navigate;
+      const targetEx = EXERCISES.find(ex => ex.id === targetId);
+      if (targetEx) {
+        showDetail(targetEx, LAYER_META[targetEx.layer]);
+        const targetNode = container.querySelector(`[data-id="${targetId}"]`);
+        if (targetNode) targetNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  });
+}
+
+detailClose.addEventListener('click', () => detailPanel.classList.remove('detail-panel--visible'));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') detailPanel.classList.remove('detail-panel--visible'); });
+document.addEventListener('click', (e) => {
+  if (!detailPanel.contains(e.target) && !e.target.closest('.node')) {
+    detailPanel.classList.remove('detail-panel--visible');
+  }
+});
+</script>
+</body>
+</html>

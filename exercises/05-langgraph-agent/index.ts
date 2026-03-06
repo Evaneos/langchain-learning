@@ -80,7 +80,7 @@ async function partA() {
   console.log(`Total messages in conversation: ${result.messages.length}\n`);
 
   for (const msg of result.messages) {
-    const type = msg._getType();
+    const { type } = msg;
     if (type === "human") {
       console.log(`[human] ${(msg.content as string).slice(0, 80)}...`);
     } else if (type === "ai" && "tool_calls" in msg && (msg.tool_calls as unknown[])?.length) {
