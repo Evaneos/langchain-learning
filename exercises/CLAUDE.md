@@ -8,6 +8,14 @@ Chaque exercice contient :
 
 Les commentaires doivent expliquer le "quoi" et le "pourquoi", pas le "comment" évident.
 
+### Consistance entre exercices
+
+- **Réutiliser les mêmes tools** (ex: `get_weather`, `search_flights`) d'un exercice à l'autre sauf si le concept nécessite un tool différent. L'apprenant doit reconnaître le code familier et se concentrer sur le nouveau concept.
+- **Garder les mêmes patterns de code** : si un exercice utilise `const userMessage = new HumanMessage(...)` avant l'appel, les exercices suivants doivent faire pareil (pas de `new HumanMessage(...)` inline).
+- **Découper en fonctions** quand un exercice a plusieurs parties autonomes (Part A, B, C…). Chaque partie = une `async function partX()` appelée depuis `main()`. Si les parties sont courtes et interdépendantes, un seul `main()` suffit.
+- **Filtrage par partie** : quand l'exercice a des parties, lire `process.argv[2]` pour permettre `npm run latest -- A` (une seule partie) ou `npm run latest` (toutes). Pattern : `const partFilter = process.argv[2]?.toUpperCase();` puis `if (!partFilter || partFilter === "A") await partA();`.
+- En résumé : seul ce qui est **nouveau** pour l'exercice change. Le reste reste identique.
+
 ### Liens entre exercices
 
 Quand un concept d'un exercice précédent est **observable** dans l'exercice courant (ex: `stop_reason` change de valeur), **ajouter un `console.log`** plutôt qu'un simple commentaire. L'apprenant doit voir le lien dans la sortie, pas seulement dans le code source. Le commentaire accompagne le log pour expliquer le contexte.
