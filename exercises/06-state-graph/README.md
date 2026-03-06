@@ -44,7 +44,7 @@ START → prepare → agent → shouldContinue? → tools → agent (loop)
                                            → END
 ```
 
-### Part C (TODO: post-processing)
+### Part C (post-processing)
 ```
 START → prepare → agent → shouldContinue? → tools → agent (loop)
                                            → postprocess → END

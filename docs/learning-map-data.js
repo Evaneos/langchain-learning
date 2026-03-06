@@ -158,7 +158,7 @@ const EXERCISES = [
   },
   {
     id: '06', title: 'StateGraph', layer: 'lg', done: true,
-    concepts: 'state graph, nodes, edges, custom state, pre-processing',
+    concepts: 'state graph, nodes, edges, custom state, pre/post-processing',
     insights: [
       '<code>createAgent</code> is just <strong>5 lines of StateGraph</strong>: 2 nodes, 3 edges, 1 conditional. Once you see it, "agent" stops being magic.',
       'A node is just <code>async (state) => partialState</code>. No class, no interface — just a function that reads state and returns what changed. The graph handles the rest.',

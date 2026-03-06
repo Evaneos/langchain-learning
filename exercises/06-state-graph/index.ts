@@ -180,23 +180,95 @@ async function partB() {
   console.log();
 }
 
-// --- Part C: TODO(human) ---
-// Add a post-processing node that runs AFTER the LLM's final response.
-//
-// Idea: a "summarize" node that takes the last AI message and appends a
-// short summary line (e.g., key facts extracted). This is the mirror of
-// Part B's pre-processing — together they form a prepare → agent → post-process pipeline.
-//
-// Hints:
-// 1. Add a new node "postprocess" after the agent (when shouldContinue returns END)
-// 2. The routing function should return "postprocess" instead of END when the LLM is done
-// 3. Add an edge from "postprocess" → END
-// 4. The postprocess function can call the LLM again with a different prompt,
-//    or simply parse/transform the last message
-//
-// Stretch goal: make the postprocess node call the LLM with:
-//   "Summarize the above conversation in 1 bullet point per key fact."
-//   and append that as the final message.
+// --- Part C: Post-processing node (the mirror of Part B's prepare) ---
+async function partC() {
+  console.log("=== Part C: Post-processing node (prepare → agent → postprocess) ===\n");
+
+  // Part B added a node BEFORE the agent. Now we add one AFTER.
+  // Together: prepare → agent ↔ tools → postprocess → END
+  // This is the full pipeline pattern used in production agents for
+  // logging, summarization, or response transformation.
+
+  const { Annotation } = await import("@langchain/langgraph");
+  const GraphState = Annotation.Root({
+    ...MessagesAnnotation.spec,
+    travelContext: Annotation<string>,
+    systemPrompt: Annotation<string>,
+  });
+
+  const modelWithTools = model.bindTools(tools);
+
+  async function prepare(state: typeof GraphState.State) {
+    const prompt =
+      `You are a travel advisor. Here is context about the traveler:\n${state.travelContext}\n\n` +
+      "Use this context to personalize your recommendations.";
+    console.log("[prepare] Built system prompt");
+    return { systemPrompt: prompt };
+  }
+
+  async function callModel(state: typeof GraphState.State) {
+    const messagesWithSystem = [
+      new SystemMessage(state.systemPrompt),
+      ...state.messages,
+    ];
+    const response = await modelWithTools.invoke(messagesWithSystem);
+    return { messages: [response] };
+  }
+
+  // The NEW part: postprocess calls the LLM again with a summarization prompt.
+  // It reads ALL messages from state (the full conversation) and asks for a summary.
+  // The summary is appended as a new AIMessage — the append reducer handles it.
+  async function postprocess(state: typeof GraphState.State) {
+    console.log("[postprocess] Summarizing conversation...");
+    // Call the base model (no tools) — we just want text, not tool calls.
+    const summary = await model.invoke([
+      ...state.messages,
+      new HumanMessage(
+        "Summarize the above conversation in 1 bullet point per key fact. Start with '📋 Summary:'",
+      ),
+    ]);
+    return { messages: [summary] };
+  }
+
+  // The routing function now has 3 possible destinations instead of 2:
+  // "tools" (continue the ReAct loop) or "postprocess" (LLM is done, summarize).
+  function shouldContinue(state: typeof GraphState.State) {
+    const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
+    if (lastMessage.tool_calls?.length) return "tools";
+    // Instead of END, route to postprocess — this is the key change vs Part A/B.
+    return "postprocess";
+  }
+
+  // The graph: prepare → agent ↔ tools → postprocess → END
+  const graph = new StateGraph(GraphState)
+    .addNode("prepare", prepare)
+    .addNode("agent", callModel)
+    .addNode("tools", new ToolNode(tools))
+    .addNode("postprocess", postprocess)
+    .addEdge(START, "prepare")
+    .addEdge("prepare", "agent")
+    .addConditionalEdges("agent", shouldContinue)
+    .addEdge("tools", "agent")
+    // postprocess → END: after summarizing, we're done.
+    .addEdge("postprocess", END)
+    .compile();
+
+  const result = await graph.invoke({
+    messages: [
+      new HumanMessage("I want to go to Bali in July from Paris."),
+    ],
+    travelContext: "Budget traveler, prefers hostels, vegetarian, first time in Asia.",
+    systemPrompt: "",
+  });
+
+  console.log(`\nTotal messages: ${result.messages.length}\n`);
+  logConversation(result.messages);
+
+  // The LAST message is now the summary, not the agent's response.
+  console.log("\n--- Summary (last message) ---");
+  console.log(result.messages[result.messages.length - 1].content);
+  console.log();
+}
 
 // Run a specific part with: npx tsx index.ts A (or B, C). No arg = run all.
 const partFilter = process.argv[2]?.toUpperCase();
@@ -204,7 +276,7 @@ const partFilter = process.argv[2]?.toUpperCase();
 async function main() {
   if (!partFilter || partFilter === "A") await partA();
   if (!partFilter || partFilter === "B") await partB();
-  // if (!partFilter || partFilter === "C") await partC();
+  if (!partFilter || partFilter === "C") await partC();
 }
 
 main();
