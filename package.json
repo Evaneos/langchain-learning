@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "latest": "npx tsx $(ls -d exercises/*/index.ts | sort | tail -1)"
   },
   "dependencies": {
     "@ai-sdk/langchain": "^1.0.101",

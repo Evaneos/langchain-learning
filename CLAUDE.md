@@ -32,8 +32,7 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 
 ## Git workflow for exercises
 
-- **Commit 1** — when the exercise is created (skeleton with `TODO(human)` placeholder)
-- **Commit 2** — when the exercise is completed (after human fills in the TODO)
+See `exercises/CLAUDE.md` for detailed conventions.
 
 ## Key context about di-agent-ui
 

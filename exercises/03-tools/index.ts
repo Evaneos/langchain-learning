@@ -10,30 +10,101 @@ const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// TODO(human): Create 2 tools for a mini travel assistant:
-//
-// 1. A "get_weather" tool that takes { city: string, month: string }
-//    and returns fake weather data (e.g. "25°C, sunny").
-//    Think about what the description should say so the LLM knows
-//    WHEN to call it.
-//
-// 2. A "search_flights" tool that takes { from: string, to: string }
-//    and returns fake flight data (e.g. "Paris → Tokyo: 650€, 12h").
-//
-// Use the `tool()` function from @langchain/core/tools:
-//   const myTool = tool(handlerFn, { name, description, schema })
-//
-// Then:
-//   - Bind them to the model with model.bindTools([...])
-//   - Invoke with a message like "I want to go to Bali in July, flying from Paris"
-//   - Log the response's tool_calls (response.tool_calls)
-//   - For each tool call, execute the matching tool and create a ToolMessage
-//   - Send everything back to the model for a final answer
-//
-// Hint: a ToolMessage needs { content, tool_call_id } to match the request.
+// --- Example 1: Full tool-calling cycle ---
+
+// tool() wraps a function so the LLM can call it.
+// It combines: a handler (the actual function), a name, a description
+// (tells the LLM WHEN to use it), and a Zod schema (tells the LLM
+// WHAT parameters to provide). Same pattern as di-agent-ui's
+// config/tools/suggest-destinations.ts: { name, description, schema }
+const getWeatherTool = tool(
+  async ({ city, month }) => {
+    // Fake implementation — in di-agent-ui, handlers call real APIs
+    return `${city} in ${month}: 28°C, tropical humidity, occasional rain.`;
+  },
+  {
+    name: "get_weather",
+    description:
+      "Get weather conditions for a city during a specific month. Use when the user asks about climate or best time to visit.",
+    schema: z.object({
+      city: z.string().describe("City name"),
+      month: z.string().describe("Month name (e.g. 'July')"),
+    }),
+  },
+);
+
+const searchFlightsTool = tool(
+  async ({ from, to }) => {
+    return `${from} → ${to}: 650€, 12h with 1 stopover.`;
+  },
+  {
+    name: "search_flights",
+    description:
+      "Search for flights between two cities. Use when the user mentions flying or needs transport options.",
+    schema: z.object({
+      from: z.string().describe("Departure city"),
+      to: z.string().describe("Destination city"),
+    }),
+  },
+);
+
+// bindTools() attaches the tool definitions to the model.
+// The LLM doesn't execute them — it returns tool_calls[] in the AIMessage
+// saying "I want to call this tool with these args". The runtime (us)
+// must execute them and send results back.
+const tools = [getWeatherTool, searchFlightsTool];
+const modelWithTools = model.bindTools(tools);
 
 async function main() {
-  // Your code here
+  console.log("=== Example 1: Full tool-calling cycle ===\n");
+
+  const userMessage = new HumanMessage(
+    "I want to go to Bali in July, flying from Paris. What's the weather like?",
+  );
+
+  // Step 1: The LLM decides which tools to call
+  // Instead of responding with text, it returns tool_calls[]
+  const aiResponse = await modelWithTools.invoke([userMessage]);
+
+  // When tools are bound, stop_reason = "tool_use" instead of "end_turn" (seen in exercise 01)
+  console.log("Stop reason:", aiResponse.response_metadata?.stop_reason);
+  console.log("\nTool calls requested by LLM:");
+  console.log(JSON.stringify(aiResponse.tool_calls, null, 2));
+
+  // Step 2: Execute each tool manually and build ToolMessages
+  // A ToolMessage links the result back to the request via tool_call_id
+  // — this is how the LLM knows which result corresponds to which call.
+  // Note: LangGraph's ToolNode automates this dispatch (exercise 05),
+  // but here we do it manually to understand the mechanics.
+  const toolMessages: ToolMessage[] = [];
+  for (const toolCall of aiResponse.tool_calls ?? []) {
+    const selectedTool = tools.find((t) => t.name === toolCall.name)!;
+    // @ts-expect-error -- union of tool types not callable, resolved by ToolNode in exercise 05
+    const result = await selectedTool.invoke(toolCall.args);
+    toolMessages.push(
+      new ToolMessage({
+        content: result,
+        tool_call_id: toolCall.id!,
+      }),
+    );
+    console.log(`\nExecuted ${toolCall.name}:`, result);
+  }
+
+  // Step 3: Send the full conversation back to the LLM
+  // [user message, AI response with tool_calls, tool results]
+  // The LLM now has the tool results and can produce a final answer.
+  // This is ONE iteration of the ReAct loop — exercise 05 will automate it.
+  const finalResponse = await modelWithTools.invoke([
+    userMessage,
+    aiResponse,
+    ...toolMessages,
+  ]);
+
+  console.log("\n--- Final response ---");
+  console.log(finalResponse.content);
+
+  // TODO(human): Create a third tool (e.g. "search_hotels") and add it to the flow.
+  // Try a prompt that triggers all 3 tools at once — does the LLM call them all?
 }
 
 main();
