@@ -240,11 +240,28 @@ const MUTATIONS = [
       {
         legend: '<code>bindTools()</code> + manual dispatch loop → <code>createAgent()</code> automates the entire ReAct cycle.',
         before: `const modelWithTools = model.bindTools(tools);
+// Ask the LLM — it returns tool_calls, not text
 const response = await modelWithTools.invoke([msg]);
-// → manual: loop, dispatch, ToolMessage, re-invoke...`,
+
+// Manual dispatch: find each tool, execute, wrap result
+const toolMessages = [];
+for (const tc of response.tool_calls) {
+  const fn = tools.find(t => t.name === tc.name);
+  const out = await fn.invoke(tc.args);
+  toolMessages.push(new ToolMessage({
+    content: out,
+    tool_call_id: tc.id,
+  }));
+}
+
+// Re-invoke with full conversation history
+const answer = await modelWithTools.invoke([
+  msg, response, ...toolMessages,
+]);`,
         after: `const agent = createAgent({ model, tools });
+// Agent loops internally until end_turn
 const result = await agent.invoke({ messages: [msg] });
-// → done! agent loops internally until end_turn`,
+// result.messages = full history, including ToolMessages`,
       },
     ],
   },

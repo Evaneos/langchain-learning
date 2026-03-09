@@ -1437,10 +1437,9 @@ function createSVG() {
       const path = svg.querySelector(`.conn-prereq[data-from="${mutation.from}"][data-to="${mutation.to}"]`);
       if (!path) return;
 
-      // Sync icon appearance with arrow animation end
-      const arrow = svg.querySelector(`.conn-arrow[data-from="${mutation.from}"][data-to="${mutation.to}"]`);
-      const arrowDelay = arrow ? parseFloat(arrow.style.animationDelay) : 0;
-      const iconDelay = arrowDelay + 0.3; // arrow animation duration = 0.3s
+      // Icon appears when the line animation reaches its midpoint (50% of drawLine)
+      const lineDelay = parseFloat(path.style.animationDelay) || 0;
+      const iconDelay = lineDelay + 0.25; // drawLine is 0.5s, icon is at 50%
 
       const len = path.getTotalLength();
       const mid = path.getPointAtLength(len / 2);
@@ -1820,10 +1819,7 @@ async function openMorphModal(mutation) {
     const beforeStep = machine.commit(block.before).current;
     const afterStep = machine.commit(block.after).current;
 
-    // Render initial "before" state without animation
     const renderer = new MagicMoveRenderer(codeContainer);
-    renderer.replace(beforeStep);
-    let state = 'before';
 
     const controls = document.createElement('div');
     controls.className = 'morph-controls';
@@ -1832,6 +1828,19 @@ async function openMorphModal(mutation) {
       <button class="morph-btn morph-btn-play" data-action="play"><svg class="morph-btn-play-icon" width="10" height="10" viewBox="0 0 10 10"><polygon points="1,0 9,5 1,10" fill="currentColor"/></svg><span class="morph-btn-play-label"><span class="morph-btn-play-label-play">Play</span><span class="morph-btn-play-label-revert">Revert</span></span></button>
       <button class="morph-btn morph-btn-after" data-action="after">After &rsaquo;</button>
     `;
+    blockEl.appendChild(controls);
+    modalContent.appendChild(blockEl);
+
+    // Pre-measure both heights (element must be in DOM for offsetHeight)
+    // All synchronous — browser won't paint between replace() calls
+    renderer.replace(beforeStep);
+    const beforeH = codeContainer.offsetHeight;
+    renderer.replace(afterStep);
+    const afterH = codeContainer.offsetHeight;
+    renderer.replace(beforeStep);
+    codeContainer.style.height = beforeH + 'px';
+    codeContainer.style.overflow = 'hidden';
+    let state = 'before';
 
     const playBtn = controls.querySelector('.morph-btn-play');
 
@@ -1854,23 +1863,28 @@ async function openMorphModal(mutation) {
 
       if (action === 'before') {
         renderer.replace(beforeStep);
+        codeContainer.style.transition = 'none';
+        codeContainer.style.height = beforeH + 'px';
         updateButtons('before');
       } else if (action === 'after') {
         renderer.replace(afterStep);
+        codeContainer.style.transition = 'none';
+        codeContainer.style.height = afterH + 'px';
         updateButtons('after');
       } else if (action === 'play') {
+        codeContainer.style.transition = 'height 0.8s ease';
         if (state === 'after') {
+          codeContainer.style.height = beforeH + 'px';
           updateButtons('before');
           await renderer.render(beforeStep);
         } else {
+          codeContainer.style.height = afterH + 'px';
           updateButtons('after');
           await renderer.render(afterStep);
         }
       }
     });
 
-    blockEl.appendChild(controls);
-    modalContent.appendChild(blockEl);
   });
 }
 
