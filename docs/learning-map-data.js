@@ -34,6 +34,16 @@ const EXERCISES = [
         from: 'AIMessage',
         detail: 'Normalized token counts: <code>input_tokens</code>, <code>output_tokens</code>, <code>total_tokens</code>. Useful for cost tracking. Unlike <code>response_metadata</code>, this format is consistent across all LangChain providers.' }
     ],
+    code: `const model = new ChatAnthropic({ model: "claude-haiku-4-5" });
+
+const response = await model.invoke([
+  new SystemMessage("You are a helpful assistant."),
+  new HumanMessage("What is LangChain in one sentence?"),
+]);
+
+console.log(response.content);
+// response.response_metadata.stop_reason → "end_turn"
+// response.usage_metadata → { input_tokens, output_tokens }`,
     prereqs: [],
     shared: [
       { concept: 'stop_reason', targets: ['03', '04'] },
@@ -61,6 +71,18 @@ const EXERCISES = [
         signature: 'z.string().describe("explanation for the model")',
         detail: 'Critical for quality. The description string is sent to the model as the field\'s "purpose" — it\'s your main lever to guide what the model puts in each field. A vague <code>.describe("name")</code> gives worse results than <code>.describe("The traveler\'s full name as they\'d like to be addressed")</code>. Think of it as a mini-prompt per field.' }
     ],
+    code: `const schema = z.object({
+  name: z.string().describe("Destination name"),
+  country: z.string().describe("Country"),
+  best_season: z.string().describe("Best time to visit"),
+  family_score: z.number().min(1).max(10)
+    .describe("How family-friendly, 1-10"),
+});
+
+const structured = model.withStructuredOutput(schema);
+const result = await structured.invoke("Suggest a destination.");
+// result is a plain object — not an AIMessage
+console.log(result.family_score); // number, not string`,
     prereqs: ['01'],
     shared: [{ concept: 'Zod schemas', targets: ['03'] }]
   },
@@ -91,6 +113,30 @@ const EXERCISES = [
         from: 'ToolMessage',
         detail: 'Links a <code>ToolMessage</code> response back to the specific <code>tool_call</code> that triggered it. Required by the API — without it, the model can\'t match which result corresponds to which tool request. Copy it from <code>toolCall.id</code>.' }
     ],
+    code: `const getWeather = tool(fn, {
+  name: "get_weather",
+  description: "Get weather for a city",
+  schema: z.object({ city: z.string(), month: z.string() }),
+});
+
+const modelWithTools = model.bindTools([getWeather]);
+const response = await modelWithTools.invoke([msg]);
+// stop_reason: "tool_use" — the model wants YOU to act
+
+// Manual dispatch — find, execute, wrap each tool_call
+for (const tc of response.tool_calls) {
+  const tool = tools.find(t => t.name === tc.name);
+  const result = await tool.invoke(tc.args);
+  toolMessages.push(new ToolMessage({
+    content: result,
+    tool_call_id: tc.id,
+  }));
+}
+
+// Re-invoke with tool results → final answer
+const answer = await modelWithTools.invoke([
+  msg, response, ...toolMessages,
+]);`,
     prereqs: ['01', '02'],
     shared: [{ concept: 'tool loop', targets: ['04', '05'] }]
   },
@@ -119,6 +165,23 @@ const EXERCISES = [
         from: 'JavaScript',
         detail: 'The native JS pattern for consuming async iterables. <code>for await (const chunk of stream) { ... }</code> processes each chunk as it arrives. You can <code>break</code> out early to cancel the stream. This is what makes real-time UX possible — you update the UI inside the loop body.' }
     ],
+    code: `const stream = await model.stream([msg]);
+
+for await (const chunk of stream) {
+  // Text chunks — write live
+  process.stdout.write(chunk.content);
+
+  // Tool call chunks — JSON args arrive as fragments
+  if (chunk.tool_call_chunks?.length) {
+    for (const tc of chunk.tool_call_chunks) {
+      if (tc.name) console.log(\`Calling: \${tc.name}\`);
+      if (tc.args) process.stdout.write(tc.args);
+    }
+  }
+}
+
+// Reconstruct full message from chunks
+const full = chunks.reduce((acc, c) => acc.concat(c));`,
     prereqs: ['01', '03'],
     shared: [{ concept: 'streaming', targets: ['10'] }]
   },
@@ -153,6 +216,21 @@ const EXERCISES = [
         from: 'createAgent options',
         detail: 'A string or <code>SystemMessage</code> injected at the start of every conversation. In di-agent-ui, this is the massive system prompt built from skills + context. Passed as a string, the agent wraps it in <code>SystemMessage</code> internally. Previously called <code>prompt</code> in the deprecated <code>createReactAgent</code> API.' }
     ],
+    code: `const agent = createAgent({ model, tools, systemPrompt });
+
+// .invoke() — runs the full ReAct loop internally
+const result = await agent.invoke({ messages: [msg] });
+// result.messages = [Human, AI(tool_calls), Tool, AI(final)]
+
+// .stream() — real-time chunks through the agent loop
+const stream = await agent.stream(
+  { messages: [msg] },
+  { streamMode: "messages" },
+);
+for await (const [message, metadata] of stream) {
+  // metadata.langgraph_node → "model_request" | "tools"
+  process.stdout.write(message.content);
+}`,
     prereqs: ['03', '04'],
     shared: [{ concept: 'agent graph', targets: ['06', '09'] }]
   },
@@ -200,6 +278,22 @@ const EXERCISES = [
         from: 'StateGraph',
         detail: 'Freezes the graph and returns a <code>CompiledGraph</code> — a runnable with <code>.invoke()</code>, <code>.stream()</code>, same interface as what <code>createAgent</code> returns. After compile, you can\'t add more nodes or edges.' }
     ],
+    code: `const graph = new StateGraph(MessagesAnnotation)
+  .addNode("agent", async (state) => {
+    const response = await modelWithTools.invoke(state.messages);
+    return { messages: [response] }; // append reducer
+  })
+  .addNode("tools", new ToolNode(tools))
+  .addEdge(START, "agent")
+  .addConditionalEdges("agent", (state) => {
+    const last = state.messages.at(-1);
+    return last.tool_calls?.length ? "tools" : END;
+  })
+  .addEdge("tools", "agent")
+  .compile();
+
+// Same .invoke() / .stream() as createAgent
+const result = await graph.invoke({ messages: [msg] });`,
     prereqs: ['05'],
     shared: [
       { concept: 'custom state', targets: ['07', '08'] },
@@ -262,6 +356,57 @@ const answer = await modelWithTools.invoke([
 // Agent loops internally until end_turn
 const result = await agent.invoke({ messages: [msg] });
 // result.messages = full history, including ToolMessages`,
+      },
+    ],
+  },
+  {
+    from: '01', to: '03',
+    blocks: [
+      {
+        legend: 'Same <code>.invoke()</code> call — but <code>bindTools()</code> augments the model, and the response shifts from text to <code>tool_calls</code>.',
+        before: `const response = await model.invoke([msg]);
+// stop_reason: "end_turn" — the model is done talking
+console.log(response.content);`,
+        after: `const modelWithTools = model.bindTools(tools);
+const response = await modelWithTools.invoke([msg]);
+// stop_reason: "tool_use" — the model wants YOU to act
+console.log(response.tool_calls);`,
+      },
+    ],
+  },
+  {
+    from: '01', to: '04',
+    blocks: [
+      {
+        legend: '<code>.invoke()</code> → <code>.stream()</code> — same question, but the answer arrives token by token via <code>for await</code>.',
+        before: `// Wait for the full response, then read it
+const response = await model.invoke([msg]);
+console.log(response.content);`,
+        after: `// Process tokens as they arrive
+const stream = await model.stream([msg]);
+for await (const chunk of stream) {
+  process.stdout.write(chunk.content);
+}`,
+      },
+    ],
+  },
+  {
+    from: '05', to: '06',
+    blocks: [
+      {
+        legend: '<code>createAgent()</code> is just 5 lines of <code>StateGraph</code>: 2 nodes, 3 edges, 1 conditional. Open the black box.',
+        before: `const agent = createAgent({ model, tools });
+// Black box: 2 nodes, 3 edges, 1 conditional
+const result = await agent.invoke({ messages: [msg] });`,
+        after: `const graph = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callModel)
+  .addNode("tools", new ToolNode(tools))
+  .addEdge(START, "agent")
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent")
+  .compile();
+// Same interface — .invoke() works identically
+const result = await graph.invoke({ messages: [msg] });`,
       },
     ],
   },

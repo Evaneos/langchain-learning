@@ -473,7 +473,9 @@
     z-index: 100;
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    max-height: 60vh;
+    height: 45vh;
+    min-height: 320px;
+    max-height: 520px;
     overflow-y: auto;
     backdrop-filter: blur(24px);
   }
@@ -507,10 +509,10 @@
   .detail-inner {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1px 1fr;
+    grid-template-columns: 2fr 1px 3fr;
     gap: 0 32px;
     padding: 24px 40px 28px;
-    max-width: 960px;
+    max-width: 1280px;
     margin: 0 auto;
   }
 
@@ -886,6 +888,31 @@
 
   .detail-right { animation-delay: 0.06s; }
 
+  /* ── DETAIL CODE SNIPPET ── */
+  .detail-code-section { margin-top: auto; }
+
+  .detail-code {
+    position: relative;
+    white-space: pre;
+    background: #0d1117;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    overflow-x: auto;
+    color: #e2e8f0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .detail-code .shiki-magic-move-container {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.75rem;
+    line-height: 1.65;
+  }
+
   /* ── ENTRANCE ANIMATION ── */
   @keyframes nodeAppear {
     from { opacity: 0; transform: translateY(16px) scale(0.97); }
@@ -908,8 +935,10 @@
     to { opacity: 1; }
   }
 
-  /* ── MORPH ICON (inside SVG foreignObject) ── */
+  /* ── MORPH ICON (absolutely positioned in container, above nodes) ── */
   .morph-icon {
+    position: absolute;
+    z-index: 5;
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -1430,9 +1459,19 @@ function createSVG() {
   });
 
   // Add morph icons on connections that have mutation data.
-  // Icons are embedded inside the SVG via <foreignObject> to avoid
-  // appending children to the container (which breaks SVG viewBox sizing).
+  // Icons live in document.body (NOT in the container) because appending any
+  // element to the container changes scrollWidth/scrollHeight, which breaks
+  // the SVG viewBox calculation. Icons use page-absolute coordinates derived
+  // from the container's position + SVG midpoint.
   if (typeof MUTATIONS !== 'undefined') {
+    // Remove old morph icons from previous createSVG calls
+    document.querySelectorAll('.morph-icon').forEach(el => el.remove());
+
+    // Convert container-relative coords to page-absolute coords
+    const cr = container.getBoundingClientRect();
+    const pageOffX = cr.left + window.scrollX;
+    const pageOffY = cr.top + window.scrollY;
+
     MUTATIONS.forEach(mutation => {
       const path = svg.querySelector(`.conn-prereq[data-from="${mutation.from}"][data-to="${mutation.to}"]`);
       if (!path) return;
@@ -1445,16 +1484,10 @@ function createSVG() {
       const mid = path.getPointAtLength(len / 2);
       const SIZE = 28;
 
-      const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-      fo.setAttribute('x', mid.x - SIZE / 2);
-      fo.setAttribute('y', mid.y - SIZE / 2);
-      fo.setAttribute('width', SIZE);
-      fo.setAttribute('height', SIZE);
-      fo.style.overflow = 'visible';
-      fo.style.pointerEvents = 'all';
-
       const icon = document.createElement('div');
       icon.className = 'morph-icon';
+      icon.style.left = `${pageOffX + mid.x - SIZE / 2}px`;
+      icon.style.top = `${pageOffY + mid.y - SIZE / 2}px`;
       icon.style.animationDelay = `${iconDelay}s`;
       icon.innerHTML = '<span class="morph-icon-text">&lt;/&gt;</span>';
 
@@ -1463,8 +1496,7 @@ function createSVG() {
         openMorphModal(mutation);
       });
 
-      fo.appendChild(icon);
-      svg.appendChild(fo);
+      document.body.appendChild(icon);
     });
   }
 }
@@ -1615,7 +1647,21 @@ function showDetail(ex, layer) {
   detailContent.innerHTML = `${leftCol}<div class="detail-divider"></div>${rightCol}`;
   detailPanel.classList.add('detail-panel--visible');
 
+  // Reserve space at bottom so the page content isn't hidden behind the fixed panel
+  requestAnimationFrame(() => {
+    document.body.style.paddingBottom = detailPanel.offsetHeight + 'px';
+  });
+
   bindDetailInteractions(ex);
+
+  // Highlight code snippet with Shiki (non-blocking)
+  if (ex.code && ex.done) {
+    highlightDetailCode(ex.code);
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function buildDoneRightCol(ex) {
@@ -1634,6 +1680,13 @@ function buildDoneRightCol(ex) {
       }).join('')
     : '<span style="font-size:0.75rem;color:var(--text-muted)">None — starting point</span>';
 
+  const codeSection = ex.code ? `
+      <div class="detail-code-section">
+        <div class="detail-section-label">Key pattern</div>
+        <div class="detail-code" id="detailCodeContainer">${escapeHtml(ex.code)}</div>
+      </div>
+  ` : '';
+
   return `
     <div class="detail-right" id="detailRight">
       <div class="detail-section">
@@ -1644,6 +1697,7 @@ function buildDoneRightCol(ex) {
         <div class="detail-section-label">Prerequisites</div>
         <div class="detail-prereqs">${prereqsHtml}</div>
       </div>
+      ${codeSection}
     </div>
   `;
 }
@@ -1711,6 +1765,7 @@ function showApiInspect(ex, apiIdx) {
     rightEl.outerHTML = buildDoneRightCol(ex);
     detailContent.querySelectorAll('.api-tag').forEach(t => t.classList.remove('api-tag--active'));
     bindDetailInteractions(ex);
+    if (ex.code) highlightDetailCode(ex.code);
   });
 }
 
@@ -1738,20 +1793,39 @@ function bindDetailInteractions(ex) {
   });
 }
 
-detailClose.addEventListener('click', () => detailPanel.classList.remove('detail-panel--visible'));
+async function highlightDetailCode(code) {
+  const container = document.getElementById('detailCodeContainer');
+  if (!container) return;
+  try {
+    const { machine, MagicMoveRenderer } = await getShikiEngine();
+    const step = machine.commit(code).current;
+    const renderer = new MagicMoveRenderer(container);
+    container.textContent = '';
+    renderer.replace(step);
+  } catch {
+    // Fallback: keep the escaped text as-is
+  }
+}
+
+function closeDetailPanel() {
+  detailPanel.classList.remove('detail-panel--visible');
+  document.body.style.paddingBottom = '';
+}
+
+detailClose.addEventListener('click', closeDetailPanel);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const morphOverlay = document.getElementById('morphOverlay');
     if (morphOverlay.classList.contains('morph-overlay--visible')) {
       closeMorphModal();
     } else {
-      detailPanel.classList.remove('detail-panel--visible');
+      closeDetailPanel();
     }
   }
 });
 document.addEventListener('click', (e) => {
   if (!detailPanel.contains(e.target) && !e.target.closest('.node') && !e.target.closest('.morph-icon')) {
-    detailPanel.classList.remove('detail-panel--visible');
+    closeDetailPanel();
   }
 });
 

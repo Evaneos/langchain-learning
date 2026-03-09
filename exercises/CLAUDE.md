@@ -44,8 +44,22 @@ Avant le commit de création (étape 4), mettre à jour le noeud dans `docs/lear
 - **`concepts`** : concepts clés, courts, séparés par virgule
 - **`apis[]`** : chaque API clé avec `name`, `from` (package d'origine), `detail` (explication pédagogique riche avec `<code>`, contexte di-agent-ui si pertinent, et liens vers les autres exercices), `signature` optionnelle
 - **`insights[]`** : phrases "aha moment" qui créent un déclic de compréhension. Non-obvious, intelligentes. Peuvent faire le pont entre exercices ("Structured output IS tool calling in disguise"). Laisser vide si rien de pertinent — mieux vaut 0 insight que des insights médiocres
+- **`code`** : snippet conceptuel (~8-18 lignes) montrant le **key pattern** de l'exercice. Affiché dans le detail panel avec coloration Shiki. Règles :
+  - Montrer le pattern essentiel uniquement — pas d'imports, pas de dotenv, pas de setup du model
+  - Garder les noms familiers (`getWeatherTool`, `searchFlightsTool`) pour que l'apprenant reconnaisse "son" code
+  - Ajouter des **commentaires inline courts** aux lignes clés — ils doivent pointer le "pourquoi" ou le déclic conceptuel, pas décrire le code
+  - Le snippet doit être **auto-suffisant visuellement** : en le lisant seul, on comprend le pattern sans ouvrir l'exercice
 
 ### Connexions
 
 - **`prereqs[]`** : exercices nécessaires pour comprendre celui-ci. Vérifier que le graphe de dépendances reste cohérent (pas de cycle, pas de prereq manquant)
 - **`shared[]`** : concepts qui traversent les exercices et changent de sens ou de forme (ex: `stop_reason` évolue entre 01→03→04, `Zod schemas` réutilisés entre 02→03). Vérifier aussi si des exercices **existants** doivent ajouter un `shared` pointant vers le nouveau
+
+### Code Morphing (MUTATIONS)
+
+Quand le nouvel exercice **transforme visiblement du code** d'un exercice précédent, ajouter une entrée dans `MUTATIONS[]` (affiché comme diff animé sur la connexion du graphe).
+
+- **`legend`** : une phrase avec `<code>` et `→` qui capture le déclic de la transformation
+- **`before`/`after`** : le pattern essentiel uniquement — pas d'imports, pas de setup. L'apprenant doit reconnaître "son" code
+- **Commentaires dans le code** : pointer ce qui change côté comportement (ex: `// stop_reason: "end_turn"` → `// stop_reason: "tool_use"`)
+- Pas systématique — seulement quand la transformation crée un "aha" visuel
