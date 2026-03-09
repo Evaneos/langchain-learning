@@ -1402,13 +1402,25 @@ function createSVG() {
       const cp = dist * 0.35;
       return `M ${from.x} ${from.y} C ${from.x + (goingRight ? cp : -cp)} ${from.y}, ${to.x + (goingRight ? -cp : cp)} ${to.y}, ${to.x} ${to.y}`;
     } else {
-      // Vertical / diagonal connection: bottom → top
-      const from = getEdge(fromId, 'bottom');
-      const to = getEdge(toId, 'top');
-      to.y -= GAP; // pull endpoint above card
-      const dy = to.y - from.y;
-      const cp = Math.max(dy * 0.45, 40);
-      return `M ${from.x} ${from.y} C ${from.x} ${from.y + cp}, ${to.x} ${to.y - cp}, ${to.x} ${to.y}`;
+      // Cross-layer connection — detect direction
+      const goingDown = fr.cy < tr.cy;
+      if (goingDown) {
+        // Downward: bottom → top
+        const from = getEdge(fromId, 'bottom');
+        const to = getEdge(toId, 'top');
+        to.y -= GAP;
+        const dy = to.y - from.y;
+        const cp = Math.max(dy * 0.45, 40);
+        return `M ${from.x} ${from.y} C ${from.x} ${from.y + cp}, ${to.x} ${to.y - cp}, ${to.x} ${to.y}`;
+      } else {
+        // Upward: top → bottom (e.g. DA layer → LG layer)
+        const from = getEdge(fromId, 'top');
+        const to = getEdge(toId, 'bottom');
+        to.y += GAP;
+        const dy = from.y - to.y;
+        const cp = Math.max(dy * 0.45, 40);
+        return `M ${from.x} ${from.y} C ${from.x} ${from.y - cp}, ${to.x} ${to.y + cp}, ${to.x} ${to.y}`;
+      }
     }
   }
 

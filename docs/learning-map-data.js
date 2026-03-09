@@ -47,7 +47,7 @@ console.log(response.content);
     prereqs: [],
     shared: [
       { concept: 'stop_reason', targets: ['03', '04'] },
-      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08'] }
+      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11'] }
     ]
   },
   {
@@ -183,7 +183,7 @@ for await (const chunk of stream) {
 // Reconstruct full message from chunks
 const full = chunks.reduce((acc, c) => acc.concat(c));`,
     prereqs: ['01', '03'],
-    shared: [{ concept: 'streaming', targets: ['10'] }]
+    shared: [{ concept: 'streaming', targets: ['11'] }]
   },
   {
     id: '05', title: 'createAgent', layer: 'lg', done: true,
@@ -232,7 +232,7 @@ for await (const [message, metadata] of stream) {
   process.stdout.write(message.content);
 }`,
     prereqs: ['03', '04'],
-    shared: [{ concept: 'agent graph', targets: ['06', '09'] }]
+    shared: [{ concept: 'agent graph', targets: ['06', '08'] }]
   },
   {
     id: '06', title: 'StateGraph', layer: 'lg', done: true,
@@ -296,27 +296,74 @@ for await (const [message, metadata] of stream) {
 const result = await graph.invoke({ messages: [msg] });`,
     prereqs: ['05'],
     shared: [
-      { concept: 'custom state', targets: ['07', '08'] },
-      { concept: 'graph nodes', targets: ['07'] }
+      { concept: 'custom state', targets: ['07', '09', '10'] },
+      { concept: 'graph nodes', targets: ['07', '09', '10'] }
     ]
   },
   {
-    id: '07', title: 'Checkpointing', layer: 'lg', done: false,
-    concepts: 'memory, persistence, replay',
-    apis: [], prereqs: ['06'], shared: []
+    id: '07', title: 'Checkpointing', layer: 'lg', done: true,
+    concepts: 'memory, persistence, thread isolation, state inspection',
+    insights: [
+      '<code>.compile({ checkpointer })</code> is the <strong>only change</strong> vs exercise 06. Same graph, but now every node execution saves a snapshot. Memory is opt-in, not architectural.',
+      'You only send the <strong>new message</strong> — the checkpointer reloads the full conversation from the thread. No more manually passing the entire message history.',
+      '<code>getStateHistory()</code> returns one snapshot <strong>per node execution</strong>. You can see exactly what the agent saw at each step — the ultimate debugging tool.'
+    ],
+    apis: [
+      { name: 'MemorySaver',
+        from: '@langchain/langgraph',
+        detail: 'An in-memory checkpointer that saves graph state after every node execution. Pass it to <code>.compile({ checkpointer })</code> to enable persistence. In production, you\'d swap this for a database-backed checkpointer (PostgreSQL, Redis) — same interface, different storage. In di-agent-ui, Redis persistence is hand-coded; <code>MemorySaver</code> gives you the same thing for free.' },
+      { name: 'thread_id',
+        from: 'configurable',
+        signature: '{ configurable: { thread_id: "..." } }',
+        detail: 'Identifies a conversation. Same <code>thread_id</code> = same memory. Different <code>thread_id</code> = isolated conversations. Passed as the second argument to <code>.invoke()</code> or <code>.stream()</code>. In di-agent-ui, this role is played by <code>chatId</code> in Redis.' },
+      { name: 'getState()',
+        from: 'CompiledGraph',
+        signature: 'graph.getState(config): Promise<StateSnapshot>',
+        detail: 'Returns the latest checkpoint for a thread. The snapshot contains <code>.values</code> (the full state including messages), <code>.next</code> (which nodes would execute next — empty if finished), and <code>.config</code> (with the <code>checkpoint_id</code>). Use it to inspect where a conversation stands.' },
+      { name: 'getStateHistory()',
+        from: 'CompiledGraph',
+        signature: 'graph.getStateHistory(config): AsyncIterable<StateSnapshot>',
+        detail: 'Returns ALL checkpoints for a thread in reverse chronological order. One snapshot per node execution — for a tool-using conversation: input → agent (tool_calls) → tools → agent (final). Use it for debugging, time travel, and forking. Exercise 10 (Human-in-the-loop) builds on this.' }
+    ],
+    code: `const checkpointer = new MemorySaver();
+const graph = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callModel)
+  .addNode("tools", new ToolNode(tools))
+  .addEdge(START, "agent")
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent")
+  .compile({ checkpointer }); // ← the only change
+
+// thread_id = conversation session
+const config = { configurable: { thread_id: "trip-1" } };
+await graph.invoke({ messages: [msg1] }, config);
+// Turn 2: only send the NEW message — checkpointer loads history
+await graph.invoke({ messages: [msg2] }, config);`,
+    prereqs: ['06'],
+    shared: [
+      { concept: 'checkpointer', targets: ['10'] },
+      { concept: 'thread_id', targets: ['10'] }
+    ]
   },
   {
-    id: '08', title: 'Human-in-the-loop', layer: 'lg', done: false,
+    id: '08', title: 'DeepAgents', layer: 'da', done: false,
+    concepts: 'middleware, skills, deep agent, store',
+    apis: [], prereqs: ['05'], shared: [
+      { concept: 'agent limitations', targets: ['09'] }
+    ]
+  },
+  {
+    id: '09', title: 'Hooks & Callbacks', layer: 'lg', done: false,
+    concepts: 'BaseCallbackHandler, lifecycle hooks, tool interception',
+    apis: [], prereqs: ['07', '08'], shared: []
+  },
+  {
+    id: '10', title: 'Human-in-the-loop', layer: 'lg', done: false,
     concepts: 'interrupts, approval, review',
     apis: [], prereqs: ['07'], shared: []
   },
   {
-    id: '09', title: 'DeepAgents', layer: 'da', done: false,
-    concepts: 'skills, deep agent, store',
-    apis: [], prereqs: ['05'], shared: []
-  },
-  {
-    id: '10', title: 'Vercel AI SDK', layer: 'da', done: false,
+    id: '11', title: 'Vercel AI SDK', layer: 'da', done: false,
     concepts: 'useChat, streaming UI',
     apis: [], prereqs: ['04', '05'], shared: []
   }
@@ -407,6 +454,38 @@ const result = await agent.invoke({ messages: [msg] });`,
   .compile();
 // Same interface — .invoke() works identically
 const result = await graph.invoke({ messages: [msg] });`,
+      },
+    ],
+  },
+  {
+    from: '06', to: '07',
+    blocks: [
+      {
+        legend: 'Same graph, one new argument: <code>.compile({ checkpointer })</code> turns a stateless graph into a persistent conversation.',
+        before: `const graph = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callModel)
+  .addNode("tools", new ToolNode(tools))
+  .addEdge(START, "agent")
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent")
+  .compile(); // stateless — no memory between calls
+
+await graph.invoke({ messages: [msg1] });
+// Must re-send ALL messages for context
+await graph.invoke({ messages: [msg1, ...history, msg2] });`,
+        after: `const checkpointer = new MemorySaver();
+const graph = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callModel)
+  .addNode("tools", new ToolNode(tools))
+  .addEdge(START, "agent")
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent")
+  .compile({ checkpointer }); // persistent memory
+
+const config = { configurable: { thread_id: "trip-1" } };
+await graph.invoke({ messages: [msg1] }, config);
+// Only send the NEW message — checkpointer loads history
+await graph.invoke({ messages: [msg2] }, config);`,
       },
     ],
   },
