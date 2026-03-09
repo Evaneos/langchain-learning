@@ -14,8 +14,9 @@ Chemin principal : LangChain → LangGraph → DeepAgents → intégration front
 | 06 | StateGraph | LG | done |
 | 07 | Checkpointing | LG | done |
 | 08 | DeepAgents | DA | done |
-| 09 | Hooks & Callbacks | LG | todo — ce que DeepAgents cache : BaseCallbackHandler, lifecycle events (on_llm_start, on_tool_start…), RunnableConfig callbacks, stream events |
-| 10 | Vercel AI SDK | Front | todo — useChat, streaming UI, pont LangChain → React |
+| 09 | Subagents, Store & Limites | DA | todo — subagents (`task` tool), Store cross-conversation, backends (State/Store/Composite), middleware custom, limites de l'abstraction vs StateGraph |
+| 10 | Hooks & Callbacks | LG | todo — ce que DeepAgents cache : BaseCallbackHandler, lifecycle events (on_llm_start, on_tool_start…), RunnableConfig callbacks, stream events |
+| 11 | Vercel AI SDK | Front | todo — useChat, streaming UI, pont LangChain → React |
 
 ## Section 2 — Advanced patterns (après Section 1)
 

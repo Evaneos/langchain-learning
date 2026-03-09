@@ -47,7 +47,7 @@ console.log(response.content);
     prereqs: [],
     shared: [
       { concept: 'stop_reason', targets: ['03', '04'] },
-      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10'] }
+      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11'] }
     ]
   },
   {
@@ -183,7 +183,7 @@ for await (const chunk of stream) {
 // Reconstruct full message from chunks
 const full = chunks.reduce((acc, c) => acc.concat(c));`,
     prereqs: ['01', '03'],
-    shared: [{ concept: 'streaming', targets: ['10'] }]
+    shared: [{ concept: 'streaming', targets: ['11'] }]
   },
   {
     id: '05', title: 'createAgent', layer: 'lg', done: true,
@@ -296,8 +296,8 @@ for await (const [message, metadata] of stream) {
 const result = await graph.invoke({ messages: [msg] });`,
     prereqs: ['05'],
     shared: [
-      { concept: 'custom state', targets: ['07', '09'] },
-      { concept: 'graph nodes', targets: ['07', '09'] }
+      { concept: 'custom state', targets: ['07', '10'] },
+      { concept: 'graph nodes', targets: ['07', '10'] }
     ]
   },
   {
@@ -396,12 +396,19 @@ const result = await agent.invoke(
     ]
   },
   {
-    id: '09', title: 'Hooks & Callbacks', layer: 'lg', done: false,
-    concepts: 'BaseCallbackHandler, lifecycle events, RunnableConfig callbacks, stream events',
-    apis: [], prereqs: ['07', '08'], shared: []
+    id: '09', title: 'Subagents, Store & Limites', layer: 'da', done: false,
+    concepts: 'subagents, task tool, store, backends, custom middleware, abstraction limits',
+    apis: [], prereqs: ['08'], shared: [
+      { concept: 'abstraction trade-off', targets: ['10'] }
+    ]
   },
   {
-    id: '10', title: 'Vercel AI SDK', layer: 'front', done: false,
+    id: '10', title: 'Hooks & Callbacks', layer: 'lg', done: false,
+    concepts: 'BaseCallbackHandler, lifecycle events, RunnableConfig callbacks, stream events',
+    apis: [], prereqs: ['07', '09'], shared: []
+  },
+  {
+    id: '11', title: 'Vercel AI SDK', layer: 'front', done: false,
     concepts: 'useChat, streaming UI, pont LangChain → React',
     apis: [], prereqs: ['04', '05'], shared: []
   }
