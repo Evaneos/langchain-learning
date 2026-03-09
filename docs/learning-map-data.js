@@ -228,6 +228,28 @@ const EXERCISES = [
   }
 ];
 
+// ════════════════════════════════════════════════════════════
+// MUTATIONS — Code morphing data for connections
+// Each mutation shows how code evolves between two exercises.
+// Shiki Magic Move auto-diffs the before/after code blocks.
+// ════════════════════════════════════════════════════════════
+const MUTATIONS = [
+  {
+    from: '03', to: '05',
+    blocks: [
+      {
+        legend: '<code>bindTools()</code> + manual dispatch loop → <code>createAgent()</code> automates the entire ReAct cycle.',
+        before: `const modelWithTools = model.bindTools(tools);
+const response = await modelWithTools.invoke([msg]);
+// → manual: loop, dispatch, ToolMessage, re-invoke...`,
+        after: `const agent = createAgent({ model, tools });
+const result = await agent.invoke({ messages: [msg] });
+// → done! agent loops internally until end_turn`,
+      },
+    ],
+  },
+];
+
 const LAYER_META = {
   lc: {
     label: 'LangChain',

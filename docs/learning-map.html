@@ -908,6 +908,267 @@
     to { opacity: 1; }
   }
 
+  /* ── MORPH ICON (inside SVG foreignObject) ── */
+  .morph-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1.5px solid #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    animation: morphIconAppear 0.4s ease-out backwards;
+  }
+
+  @keyframes morphIconAppear {
+    from { opacity: 0; transform: scale(0.3); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .morph-icon::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(167, 139, 250, 0.35);
+    animation: morphIconRipple 2.5s ease-out infinite;
+  }
+
+  @keyframes morphIconRipple {
+    0% { transform: scale(1); opacity: 1; }
+    70% { transform: scale(1.5); opacity: 0; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  .morph-icon:hover {
+    background: rgba(167, 139, 250, 0.15);
+    border-color: #c4b5fd;
+    box-shadow: 0 0 14px rgba(167, 139, 250, 0.4);
+    transform: scale(1.12);
+  }
+
+  .morph-icon-text {
+    color: #a78bfa;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+    transition: color 0.25s;
+  }
+
+  .morph-icon:hover .morph-icon-text {
+    color: #e9d5ff;
+  }
+
+  /* ── MORPH MODAL ── */
+  .morph-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .morph-overlay--visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .morph-modal {
+    background: var(--bg-surface);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 720px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(167, 139, 250, 0.08);
+  }
+
+  .morph-overlay--visible .morph-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .morph-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .morph-modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .morph-modal-arrow {
+    color: #a78bfa;
+    font-size: 0.9rem;
+  }
+
+  .morph-modal-close {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .morph-modal-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+
+  /* ── MORPH BLOCK ── */
+  .morph-block {
+    margin-bottom: 24px;
+  }
+
+  .morph-block:last-child {
+    margin-bottom: 0;
+  }
+
+  .morph-legend {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .morph-legend code {
+    background: rgba(167, 139, 250, 0.12);
+    color: #c4b5fd;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+  }
+
+  .morph-code {
+    position: relative;
+    white-space: pre;
+    background: #0d1117;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+  }
+
+  /* Shiki Magic Move — inlined to avoid CDN race condition */
+  .shiki-magic-move-container { position: relative; white-space: pre; }
+  .shiki-magic-move-line-number { opacity: 0.3; user-select: none; }
+  .shiki-magic-move-item { display: inline-block; transition: color var(--smm-duration, 0.5s) var(--smm-easing, ease); }
+  .shiki-magic-move-move { transition: all var(--smm-duration, 0.5s) var(--smm-easing, ease); transition-delay: calc(calc(var(--smm-duration, 0.5s) * var(--smm-delay-move, 1)) + var(--smm-stagger, 0)); z-index: 1; }
+  .shiki-magic-move-enter-active, .shiki-magic-move-leave-active { transition: all var(--smm-duration, 0.5s) var(--smm-easing, ease); }
+  .shiki-magic-move-enter-active { transition-delay: calc(calc(var(--smm-duration, 0.5s) * var(--smm-delay-enter, 1)) + var(--smm-stagger, 0)); z-index: 1; }
+  .shiki-magic-move-leave-active { transition-delay: calc(calc(var(--smm-duration, 0.5s) * var(--smm-delay-leave, 1)) + var(--smm-stagger, 0)); }
+  .shiki-magic-move-container-resize, .shiki-magic-move-container-restyle { transition: all var(--smm-duration, 0.5s) var(--smm-easing, ease); transition-delay: calc(var(--smm-duration, 0.5s) * var(--smm-delay-container, 1)); }
+  .shiki-magic-move-enter-from, .shiki-magic-move-leave-to { opacity: 0; }
+  br.shiki-magic-move-leave-active { display: none; }
+
+  .morph-code .shiki-magic-move-container {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+  }
+
+  /* ── MORPH CONTROLS ── */
+  .morph-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .morph-btn {
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    color: #c4b5fd;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .morph-btn:hover {
+    background: rgba(167, 139, 250, 0.15);
+    border-color: rgba(167, 139, 250, 0.4);
+    color: #e9d5ff;
+  }
+
+  .morph-btn--active {
+    background: rgba(167, 139, 250, 0.2);
+    border-color: #a78bfa;
+    color: #e9d5ff;
+  }
+
+  .morph-btn-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .morph-btn-play-icon {
+    transition: transform 0.5s ease;
+    flex-shrink: 0;
+  }
+
+  .morph-btn-play-label {
+    display: inline-grid;
+  }
+
+  .morph-btn-play-label > span {
+    grid-area: 1 / 1;
+    transition: opacity 0.5s ease;
+  }
+
+  .morph-btn-play-label-revert {
+    opacity: 0;
+  }
+
+  .morph-btn-play--after .morph-btn-play-icon {
+    transform: rotate(-180deg);
+  }
+
+  .morph-btn-play--after .morph-btn-play-label-play {
+    opacity: 0;
+  }
+
+  .morph-btn-play--after .morph-btn-play-label-revert {
+    opacity: 1;
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .layer--lc .layer-nodes { max-width: 440px; gap: 40px 80px; }
@@ -933,6 +1194,16 @@
 <div class="detail-panel" id="detailPanel">
   <button class="detail-panel-close" id="detailClose" aria-label="Close">&times;</button>
   <div class="detail-inner" id="detailContent"></div>
+</div>
+
+<div class="morph-overlay" id="morphOverlay">
+  <div class="morph-modal">
+    <div class="morph-modal-header">
+      <div class="morph-modal-title" id="morphModalTitle"></div>
+      <button class="morph-modal-close" id="morphModalClose">&times;</button>
+    </div>
+    <div id="morphModalContent"></div>
+  </div>
 </div>
 
 <script src="learning-map-data.js"></script>
@@ -1157,6 +1428,46 @@ function createSVG() {
       svg.appendChild(arrow);
     });
   });
+
+  // Add morph icons on connections that have mutation data.
+  // Icons are embedded inside the SVG via <foreignObject> to avoid
+  // appending children to the container (which breaks SVG viewBox sizing).
+  if (typeof MUTATIONS !== 'undefined') {
+    MUTATIONS.forEach(mutation => {
+      const path = svg.querySelector(`.conn-prereq[data-from="${mutation.from}"][data-to="${mutation.to}"]`);
+      if (!path) return;
+
+      // Sync icon appearance with arrow animation end
+      const arrow = svg.querySelector(`.conn-arrow[data-from="${mutation.from}"][data-to="${mutation.to}"]`);
+      const arrowDelay = arrow ? parseFloat(arrow.style.animationDelay) : 0;
+      const iconDelay = arrowDelay + 0.3; // arrow animation duration = 0.3s
+
+      const len = path.getTotalLength();
+      const mid = path.getPointAtLength(len / 2);
+      const SIZE = 28;
+
+      const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      fo.setAttribute('x', mid.x - SIZE / 2);
+      fo.setAttribute('y', mid.y - SIZE / 2);
+      fo.setAttribute('width', SIZE);
+      fo.setAttribute('height', SIZE);
+      fo.style.overflow = 'visible';
+      fo.style.pointerEvents = 'all';
+
+      const icon = document.createElement('div');
+      icon.className = 'morph-icon';
+      icon.style.animationDelay = `${iconDelay}s`;
+      icon.innerHTML = '<span class="morph-icon-text">&lt;/&gt;</span>';
+
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openMorphModal(mutation);
+      });
+
+      fo.appendChild(icon);
+      svg.appendChild(fo);
+    });
+  }
 }
 
 // Draw connections once the first node animation ends (layout is stable)
@@ -1429,12 +1740,153 @@ function bindDetailInteractions(ex) {
 }
 
 detailClose.addEventListener('click', () => detailPanel.classList.remove('detail-panel--visible'));
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') detailPanel.classList.remove('detail-panel--visible'); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const morphOverlay = document.getElementById('morphOverlay');
+    if (morphOverlay.classList.contains('morph-overlay--visible')) {
+      closeMorphModal();
+    } else {
+      detailPanel.classList.remove('detail-panel--visible');
+    }
+  }
+});
 document.addEventListener('click', (e) => {
-  if (!detailPanel.contains(e.target) && !e.target.closest('.node')) {
+  if (!detailPanel.contains(e.target) && !e.target.closest('.node') && !e.target.closest('.morph-icon')) {
     detailPanel.classList.remove('detail-panel--visible');
   }
 });
+
+// ════════════════════════════════════════════════════════════
+// MORPH MODAL & ENGINE (powered by Shiki Magic Move)
+// ════════════════════════════════════════════════════════════
+
+// Lazy-loaded Shiki + Magic Move modules (fetched on first morph-icon click)
+let shikiReady = null; // Promise that resolves to { machine, MagicMoveRenderer }
+
+function getShikiEngine() {
+  if (shikiReady) return shikiReady;
+  shikiReady = (async () => {
+    const [{ createHighlighter }, { codeToKeyedTokens, createMagicMoveMachine }, { MagicMoveRenderer }] = await Promise.all([
+      import('https://esm.sh/shiki@3'),
+      import('https://esm.sh/shiki-magic-move@0.5/core'),
+      import('https://esm.sh/shiki-magic-move@0.5/renderer'),
+    ]);
+
+    const highlighter = await createHighlighter({
+      themes: ['vitesse-dark'],
+      langs: ['javascript'],
+    });
+    const machine = createMagicMoveMachine(
+      code => codeToKeyedTokens(highlighter, code, { lang: 'javascript', theme: 'vitesse-dark' }),
+    );
+    return { machine, MagicMoveRenderer };
+  })();
+  return shikiReady;
+}
+
+async function openMorphModal(mutation) {
+  const morphOverlay = document.getElementById('morphOverlay');
+  const fromEx = EXERCISES.find(e => e.id === mutation.from);
+  const toEx = EXERCISES.find(e => e.id === mutation.to);
+
+  document.getElementById('morphModalTitle').innerHTML = `
+    <span>${fromEx.id} ${fromEx.title}</span>
+    <span class="morph-modal-arrow">&rarr;</span>
+    <span>${toEx.id} ${toEx.title}</span>
+  `;
+
+  const modalContent = document.getElementById('morphModalContent');
+  modalContent.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:24px;">Loading...</div>';
+  morphOverlay.classList.add('morph-overlay--visible');
+
+  const { machine, MagicMoveRenderer } = await getShikiEngine();
+
+  modalContent.innerHTML = '';
+
+  mutation.blocks.forEach(block => {
+    const blockEl = document.createElement('div');
+    blockEl.className = 'morph-block';
+
+    const legend = document.createElement('div');
+    legend.className = 'morph-legend';
+    legend.innerHTML = block.legend;
+    blockEl.appendChild(legend);
+
+    const codeContainer = document.createElement('div');
+    codeContainer.className = 'morph-code';
+    blockEl.appendChild(codeContainer);
+
+    // Compile before/after steps
+    const beforeStep = machine.commit(block.before).current;
+    const afterStep = machine.commit(block.after).current;
+
+    // Render initial "before" state without animation
+    const renderer = new MagicMoveRenderer(codeContainer);
+    renderer.replace(beforeStep);
+    let state = 'before';
+
+    const controls = document.createElement('div');
+    controls.className = 'morph-controls';
+    controls.innerHTML = `
+      <button class="morph-btn morph-btn-before morph-btn--active" data-action="before">&lsaquo; Before</button>
+      <button class="morph-btn morph-btn-play" data-action="play"><svg class="morph-btn-play-icon" width="10" height="10" viewBox="0 0 10 10"><polygon points="1,0 9,5 1,10" fill="currentColor"/></svg><span class="morph-btn-play-label"><span class="morph-btn-play-label-play">Play</span><span class="morph-btn-play-label-revert">Revert</span></span></button>
+      <button class="morph-btn morph-btn-after" data-action="after">After &rsaquo;</button>
+    `;
+
+    const playBtn = controls.querySelector('.morph-btn-play');
+
+    function updateButtons(newState) {
+      state = newState;
+      controls.querySelectorAll('.morph-btn').forEach(b => b.classList.remove('morph-btn--active'));
+      if (state === 'before') {
+        controls.querySelector('.morph-btn-before').classList.add('morph-btn--active');
+        playBtn.classList.remove('morph-btn-play--after');
+      } else {
+        controls.querySelector('.morph-btn-after').classList.add('morph-btn--active');
+        playBtn.classList.add('morph-btn-play--after');
+      }
+    }
+
+    controls.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'before') {
+        renderer.replace(beforeStep);
+        updateButtons('before');
+      } else if (action === 'after') {
+        renderer.replace(afterStep);
+        updateButtons('after');
+      } else if (action === 'play') {
+        if (state === 'after') {
+          updateButtons('before');
+          await renderer.render(beforeStep);
+        } else {
+          updateButtons('after');
+          await renderer.render(afterStep);
+        }
+      }
+    });
+
+    blockEl.appendChild(controls);
+    modalContent.appendChild(blockEl);
+  });
+}
+
+function closeMorphModal() {
+  document.getElementById('morphOverlay').classList.remove('morph-overlay--visible');
+}
+
+document.getElementById('morphModalClose').addEventListener('click', closeMorphModal);
+document.getElementById('morphOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('morphOverlay')) closeMorphModal();
+});
+
+// Preload Shiki engine in background so it's ready when user clicks
+if (typeof MUTATIONS !== 'undefined' && MUTATIONS.length > 0) {
+  requestIdleCallback(() => getShikiEngine());
+}
 </script>
 </body>
 </html>
