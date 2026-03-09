@@ -30,6 +30,10 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 - Use `dotenv` to load env vars from project root `.env` / `.env.local`
 - When referencing di-agent-ui, use relative paths from this repo root (`../evaneos/di-agent-ui/`)
 
+## Roadmap
+
+See `docs/ROADMAP.md` for the exercise plan (Section 1: Core, Section 2: Advanced patterns).
+
 ## Git workflow for exercises
 
 See `exercises/CLAUDE.md` for detailed conventions.

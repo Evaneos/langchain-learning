@@ -1,0 +1,37 @@
+# Roadmap des exercices
+
+## Section 1 — Core (comprendre di-agent-ui)
+
+Chemin principal : LangChain → LangGraph → DeepAgents → intégration front.
+
+| # | Titre | Layer | Status |
+|---|-------|-------|--------|
+| 01 | Hello LLM | LC | done |
+| 02 | Structured Output | LC | done |
+| 03 | Tools | LC | done |
+| 04 | Streaming | LC | done |
+| 05 | createAgent | LG | done |
+| 06 | StateGraph | LG | done |
+| 07 | Checkpointing | LG | done |
+| 08 | DeepAgents | DA | todo — middleware, skills, store, comprendre l'abstraction et ses limites |
+| 09 | Hooks & Callbacks | LG | todo — BaseCallbackHandler, lifecycle hooks, tool interception. Voir d'abord ce que DeepAgents offre (peu), puis faire en raw LangGraph |
+| 10 | Vercel AI SDK | DA | todo — useChat, streaming UI, pont LangChain → React |
+
+## Section 2 — Advanced patterns (après Section 1)
+
+Patterns avancés de graph et workflows complexes. Pas liés à di-agent-ui directement,
+mais nécessaires pour aller plus loin avec LangGraph.
+
+### Graph topology
+- **Router** — `addConditionalEdges` qui envoie vers un seul chemin parmi N selon le state. Deux chemins possibles convergent vers un même noeud final (un seul chemin pris).
+- **Fan-out / fan-in** — un noeud déclenche N noeuds en parallèle (même state d'entrée), un noeud de convergence attend que tous aient fini. Reducers merge les résultats.
+- **Dynamic routing** — router vers N noeuds possibles selon le contenu du state, extension du pattern router.
+
+### Human-in-the-loop
+- **Interrupts** — `interruptBefore` / `interruptAfter` pour pauser le graph avant/après un noeud.
+- **Approval workflows** — le graph s'arrête, un humain valide, le graph reprend (nécessite checkpointing, couvert en 07).
+- **State modification** — modifier le state pendant la pause (`updateState`), puis reprendre.
+
+### Autres candidats (à affiner)
+- **Sub-graphs** — graph imbriqué dans un noeud, pour modulariser des workflows complexes.
+- **Multi-agent** — plusieurs agents qui communiquent via un state partagé.
