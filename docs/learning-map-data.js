@@ -47,7 +47,7 @@ console.log(response.content);
     prereqs: [],
     shared: [
       { concept: 'stop_reason', targets: ['03', '04'] },
-      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11'] }
+      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10'] }
     ]
   },
   {
@@ -183,7 +183,7 @@ for await (const chunk of stream) {
 // Reconstruct full message from chunks
 const full = chunks.reduce((acc, c) => acc.concat(c));`,
     prereqs: ['01', '03'],
-    shared: [{ concept: 'streaming', targets: ['11'] }]
+    shared: [{ concept: 'streaming', targets: ['10'] }]
   },
   {
     id: '05', title: 'createAgent', layer: 'lg', done: true,
@@ -296,8 +296,8 @@ for await (const [message, metadata] of stream) {
 const result = await graph.invoke({ messages: [msg] });`,
     prereqs: ['05'],
     shared: [
-      { concept: 'custom state', targets: ['07', '09', '10'] },
-      { concept: 'graph nodes', targets: ['07', '09', '10'] }
+      { concept: 'custom state', targets: ['07', '09'] },
+      { concept: 'graph nodes', targets: ['07', '09'] }
     ]
   },
   {
@@ -341,30 +341,68 @@ await graph.invoke({ messages: [msg1] }, config);
 await graph.invoke({ messages: [msg2] }, config);`,
     prereqs: ['06'],
     shared: [
-      { concept: 'checkpointer', targets: ['10'] },
-      { concept: 'thread_id', targets: ['10'] }
+      { concept: 'checkpointer', targets: ['08'] },
+      { concept: 'thread_id', targets: ['08'] }
     ]
   },
   {
-    id: '08', title: 'DeepAgents', layer: 'da', done: false,
-    concepts: 'middleware, skills, deep agent, store',
-    apis: [], prereqs: ['05'], shared: [
+    id: '08', title: 'DeepAgents', layer: 'da', done: true,
+    concepts: 'createDeepAgent, skills, middleware, FilesystemBackend',
+    insights: [
+      'DeepAgents is <strong>middleware on top of ReactAgent</strong>. Every feature — skills, filesystem tools, subagents, summarization — is a pluggable middleware layer, not a new architecture.',
+      'Skills are <strong>natural language middleware</strong>: a SKILL.md file injected into the system prompt changes agent behavior without touching code. Same agent, different skill → different consultation flow.',
+      'The convenience/control trade-off: <code>createDeepAgent</code> gives you 80% instantly, but <strong>custom nodes</strong> (StateGraph, ex06) are the escape hatch when the single-loop model doesn\'t fit.'
+    ],
+    apis: [
+      { name: 'createDeepAgent()',
+        from: 'deepagents',
+        signature: 'createDeepAgent({ model, tools, skills?, backend?, checkpointer?, store?, name? })',
+        detail: 'The one-function agent factory. Under the hood, it creates a <code>ReactAgent</code> (same base as <code>createReactAgent</code> from exercise 05) and wraps it with default middleware: filesystem tools (<code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>glob</code>, <code>grep</code>), subagent delegation (<code>task</code>), skills loading, and conversation summarization. In di-agent-ui, this is called in <code>agent-factory.ts</code> with 8 travel tools, 7 skills, and a shared store.' },
+      { name: 'FilesystemBackend',
+        from: 'deepagents',
+        signature: 'new FilesystemBackend({ rootDir?, virtualMode?, maxFileSizeMb? })',
+        detail: 'Backend that reads/writes files from disk. Used by skills middleware to load SKILL.md files and by filesystem middleware to give the agent file access. In di-agent-ui, <code>rootDir</code> points to <code>config/</code> where skills and knowledge files live. Other backends exist: <code>StateBackend</code> (ephemeral per-thread), <code>StoreBackend</code> (persistent cross-conversation), <code>CompositeBackend</code> (route by path prefix).' },
+      { name: 'skills',
+        from: 'createDeepAgent options',
+        detail: 'Array of paths (relative to the backend\'s <code>rootDir</code>) where SKILL.md files are stored. Each skill has YAML frontmatter (<code>name</code>, <code>description</code>) and markdown body (when to activate, procedure, rules). DeepAgents loads them via <code>SkillsMiddleware</code> and injects their metadata into the system prompt. Progressive disclosure: only names/descriptions in the prompt, full content loaded on demand.' },
+      { name: 'SKILL.md',
+        from: 'deepagents convention',
+        detail: 'A markdown file that defines agent behavior for a specific scenario. Structure: YAML frontmatter with <code>name</code> (lowercase, hyphens) and <code>description</code>, then markdown sections for "when to activate", "procedure", and "rules". In di-agent-ui, 7 skills define the entire travel consultation flow — from destination exploration to conversation closure. Skills are configuration, not code.' },
+      { name: 'checkpointer',
+        from: 'createDeepAgent options',
+        detail: 'Same concept as exercise 07\'s <code>MemorySaver</code>, passed directly to <code>createDeepAgent</code>. Enables conversation memory via <code>thread_id</code>. Pass a <code>MemorySaver</code> instance (or any <code>BaseCheckpointSaver</code>). Combined with the agent\'s built-in state management, you get the same multi-turn memory as exercise 07 without manual graph setup.' },
+      { name: 'middleware',
+        from: 'deepagents architecture',
+        detail: 'DeepAgents\' extension mechanism. Each middleware adds tools and/or modifies the system prompt. Defaults: <code>FilesystemMiddleware</code> (file tools), <code>SubAgentMiddleware</code> (<code>task</code> tool), <code>SkillsMiddleware</code> (SKILL.md loading), <code>SummarizationMiddleware</code> (context management). You can add custom middleware via the <code>middleware</code> parameter. Di-agent-ui uses the defaults without custom middleware — the customization happens through skills and system prompt.' }
+    ],
+    code: `const agent = createDeepAgent({
+  model,
+  tools,  // same get_weather + search_flights
+  checkpointer: new MemorySaver(),
+  backend: new FilesystemBackend({ rootDir: exerciseDir }),
+  skills: ["skills/"],  // loads SKILL.md files → system prompt
+  name: "travel-agent",
+});
+
+// Same .invoke() as createAgent (ex05) and StateGraph (ex06)
+const result = await agent.invoke(
+  { messages: [new HumanMessage("Plan a trip to Bali")] },
+  { configurable: { thread_id: "trip-1" } },
+);
+// Skills guide behavior: weather first, then flights, then summary`,
+    prereqs: ['05', '07'],
+    shared: [
       { concept: 'agent limitations', targets: ['09'] }
     ]
   },
   {
     id: '09', title: 'Hooks & Callbacks', layer: 'lg', done: false,
-    concepts: 'BaseCallbackHandler, lifecycle hooks, tool interception',
+    concepts: 'BaseCallbackHandler, lifecycle events, RunnableConfig callbacks, stream events',
     apis: [], prereqs: ['07', '08'], shared: []
   },
   {
-    id: '10', title: 'Human-in-the-loop', layer: 'lg', done: false,
-    concepts: 'interrupts, approval, review',
-    apis: [], prereqs: ['07'], shared: []
-  },
-  {
-    id: '11', title: 'Vercel AI SDK', layer: 'da', done: false,
-    concepts: 'useChat, streaming UI',
+    id: '10', title: 'Vercel AI SDK', layer: 'front', done: false,
+    concepts: 'useChat, streaming UI, pont LangChain → React',
     apis: [], prereqs: ['04', '05'], shared: []
   }
 ];
@@ -489,6 +527,28 @@ await graph.invoke({ messages: [msg2] }, config);`,
       },
     ],
   },
+  {
+    from: '05', to: '08',
+    blocks: [
+      {
+        legend: '<code>createAgent()</code> → <code>createDeepAgent()</code> — same <code>.invoke()</code>, but with skills, filesystem tools, and subagents baked in.',
+        before: `const agent = createAgent({ model, tools });
+
+// Agent loops internally until end_turn
+const result = await agent.invoke({ messages: [msg] });
+// result.messages = full history, including ToolMessages`,
+        after: `const agent = createDeepAgent({
+  model, tools,
+  checkpointer: new MemorySaver(), // ex07 built-in
+  backend: new FilesystemBackend({ rootDir }),
+  skills: ["skills/"],  // SKILL.md → system prompt
+  name: "travel-agent",
+});
+// Same .invoke() — but behavior guided by skills
+const result = await agent.invoke({ messages: [msg] });`,
+      },
+    ],
+  },
 ];
 
 const LAYER_META = {
@@ -509,11 +569,19 @@ const LAYER_META = {
     tooltip: '<strong>LangGraph</strong> sits on top of LangChain. It orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop. You gain control over flow, memory, and human-in-the-loop.'
   },
   da: {
-    label: 'DeepAgents / Vercel AI',
+    label: 'DeepAgents',
     className: 'layer--da',
     glowColor: 'var(--da-glow)',
     lineColor: 'var(--da-line)',
-    tagline: 'High-level wrappers — opinionated agents & streaming UI',
-    tooltip: '<strong>DeepAgents</strong> wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. <strong>Vercel AI SDK</strong> handles the frontend: <code>useChat()</code> for streaming UI, bridging the LangChain stream to React.'
+    tagline: 'Opinionated agent wrapper — skills, middleware, store',
+    tooltip: '<strong>DeepAgents</strong> wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. The convenience/control trade-off: 80% instantly, but custom nodes are the escape hatch.'
+  },
+  front: {
+    label: 'Vercel AI SDK',
+    className: 'layer--front',
+    glowColor: 'var(--front-glow)',
+    lineColor: 'var(--front-line)',
+    tagline: 'Frontend integration — streaming UI, React bridge',
+    tooltip: '<strong>Vercel AI SDK</strong> handles the frontend: <code>useChat()</code> for streaming UI, bridging the LangChain stream to React. Independent from DeepAgents — it connects to any LangChain/LangGraph stream.'
   }
 };
