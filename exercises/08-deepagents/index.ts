@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { model, tools, logConversation } from "../utils";
+import { model, tools, logConversation, logLoadedSkills } from "../utils";
 
 const exerciseDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -77,9 +77,7 @@ async function partB() {
   // that instructs the agent to always check weather before suggesting flights,
   // then present results in structured sections.
 
-  // FilesystemBackend reads skill files from disk.
-  // rootDir points to our exercise folder so skills/ resolves relative to it.
-  const backend = new FilesystemBackend({ rootDir: exerciseDir });
+  const backend = new FilesystemBackend({ rootDir: exerciseDir, virtualMode: true });
 
   const agent = createDeepAgent({
     model,
@@ -89,21 +87,38 @@ async function partB() {
     name: "travel-agent",
   });
 
-  // The skill guides the agent through a structured procedure:
-  //   1. Check weather → 2. Climate outlook → 3. Search flights →
-  //   4. Getting there → 5. Next steps
-  console.log("--- Invoking with travel-advisor skill active ---");
-  const result = await agent.invoke({
+  // --- Call 1: a random question unrelated to travel ---
+  // No checkpointer, no thread_id — each invoke is independent (no shared memory).
+  // The skill says "When to activate: when the user asks about planning a trip".
+  // This question should NOT trigger the skill's procedure.
+  console.log("--- Call 1: random question (skill should NOT influence) ---");
+  const result1 = await agent.invoke({
+    messages: [new HumanMessage("What is the capital of Japan?")],
+  });
+  const lastMsg1 = result1.messages[result1.messages.length - 1];
+  console.log(`[ai] ${(lastMsg1.content as string).slice(0, 200)}`);
+  console.log("  Tool calls:", result1.messages.filter((m: any) => m.tool_calls?.length).length ? "yes" : "none");
+  // skillsMetadata is populated by SkillsMiddleware on first invoke.
+  // It shows what's loaded — not what's "active" (the model decides that).
+  logLoadedSkills(result1);
+  console.log("\n  Conversation trace:");
+  logConversation(result1.messages);
+  console.log();
+
+  // --- Call 2: travel question that matches the skill's activation criteria ---
+  // Same agent, same skills in the system prompt — but NOW the model recognizes
+  // the travel context and follows the skill's procedure (strict TRAVEL CARD format).
+  // Progressive disclosure: the model reads the full SKILL.md via read_file,
+  // then executes the procedure it found inside.
+  console.log("--- Call 2: travel question (skill SHOULD influence) ---");
+  const result2 = await agent.invoke({
     messages: [new HumanMessage("I want to plan a trip from Paris to Bali in July")],
   });
+  const lastMsg2 = result2.messages[result2.messages.length - 1];
+  console.log(`[ai] ${lastMsg2.content as string}\n`);
 
-  const lastMsg = result.messages[result.messages.length - 1];
-  console.log(`[ai] ${(lastMsg.content as string).slice(0, 400)}...\n`);
-
-  // Log the conversation to see tool call order.
-  // The skill should guide: get_weather first, then search_flights.
-  console.log("--- Conversation trace (observe tool call order) ---");
-  logConversation(result.messages);
+  console.log("  Conversation trace:");
+  logConversation(result2.messages);
   console.log();
 }
 

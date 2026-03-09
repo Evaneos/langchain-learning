@@ -347,10 +347,11 @@ await graph.invoke({ messages: [msg2] }, config);`,
   },
   {
     id: '08', title: 'DeepAgents', layer: 'da', done: true,
-    concepts: 'createDeepAgent, skills, middleware, FilesystemBackend',
+    concepts: 'createDeepAgent, skills, middleware, FilesystemBackend, progressive disclosure',
     insights: [
       'DeepAgents is <strong>middleware on top of ReactAgent</strong>. Every feature — skills, filesystem tools, subagents, summarization — is a pluggable middleware layer, not a new architecture.',
-      'Skills are <strong>natural language middleware</strong>: a SKILL.md file injected into the system prompt changes agent behavior without touching code. Same agent, different skill → different consultation flow.',
+      'Skills are <strong>natural language middleware</strong>: a SKILL.md file changes agent behavior without touching code. Same agent, different skill → different consultation flow.',
+      'Skills use <strong>progressive disclosure</strong>: only name + description live in the system prompt. When the model decides a skill is relevant, it calls <code>read_file</code> to load the full SKILL.md — you can see this in the conversation trace.',
       'The convenience/control trade-off: <code>createDeepAgent</code> gives you 80% instantly, but <strong>custom nodes</strong> (StateGraph, ex06) are the escape hatch when the single-loop model doesn\'t fit.'
     ],
     apis: [
@@ -361,35 +362,38 @@ await graph.invoke({ messages: [msg2] }, config);`,
       { name: 'FilesystemBackend',
         from: 'deepagents',
         signature: 'new FilesystemBackend({ rootDir?, virtualMode?, maxFileSizeMb? })',
-        detail: 'Backend that reads/writes files from disk. Used by skills middleware to load SKILL.md files and by filesystem middleware to give the agent file access. In di-agent-ui, <code>rootDir</code> points to <code>config/</code> where skills and knowledge files live. Other backends exist: <code>StateBackend</code> (ephemeral per-thread), <code>StoreBackend</code> (persistent cross-conversation), <code>CompositeBackend</code> (route by path prefix).' },
+        detail: 'Backend that reads/writes files from disk. <code>virtualMode: true</code> makes <code>/</code> resolve to <code>rootDir</code> instead of the real filesystem root — required because the filesystem system prompt tells the model "all paths must start with /". Without it, <code>read_file("/skills/...")</code> looks at the real <code>/skills/</code>. In di-agent-ui, <code>rootDir</code> points to <code>config/</code> where skills and knowledge files live.' },
       { name: 'skills',
         from: 'createDeepAgent options',
-        detail: 'Array of paths (relative to the backend\'s <code>rootDir</code>) where SKILL.md files are stored. Each skill has YAML frontmatter (<code>name</code>, <code>description</code>) and markdown body (when to activate, procedure, rules). DeepAgents loads them via <code>SkillsMiddleware</code> and injects their metadata into the system prompt. Progressive disclosure: only names/descriptions in the prompt, full content loaded on demand.' },
+        detail: 'Array of paths (relative to the backend\'s <code>rootDir</code>) where SKILL.md files are stored. <code>SkillsMiddleware</code> loads them and injects metadata into the system prompt. <strong>Progressive disclosure</strong>: only names/descriptions appear in the prompt. When the model recognizes a matching context, it calls <code>read_file</code> to load the full SKILL.md, then follows the procedure inside.' },
       { name: 'SKILL.md',
         from: 'deepagents convention',
-        detail: 'A markdown file that defines agent behavior for a specific scenario. Structure: YAML frontmatter with <code>name</code> (lowercase, hyphens) and <code>description</code>, then markdown sections for "when to activate", "procedure", and "rules". In di-agent-ui, 7 skills define the entire travel consultation flow — from destination exploration to conversation closure. Skills are configuration, not code.' },
+        detail: 'A markdown file that defines agent behavior for a specific scenario. Structure: YAML frontmatter with <code>name</code> (lowercase, hyphens) and <code>description</code>, then markdown sections for "when to activate", "procedure", and "rules". In di-agent-ui, 7 skills define the entire travel consultation flow. Skills are configuration, not code.' },
+      { name: 'skillsMetadata',
+        from: 'agent state (SkillsMiddleware)',
+        detail: 'Array stored in the agent\'s state after first invoke. Each entry has <code>name</code>, <code>description</code>, <code>path</code>, <code>allowedTools</code>, <code>metadata</code>. Shows what skills are <strong>loaded</strong> — not what\'s "active" (the model decides that based on context). Not in the public type — access via <code>(result as any).skillsMetadata</code>.' },
       { name: 'checkpointer',
         from: 'createDeepAgent options',
         detail: 'Same concept as exercise 07\'s <code>MemorySaver</code>, passed directly to <code>createDeepAgent</code>. Enables conversation memory via <code>thread_id</code>. Pass a <code>MemorySaver</code> instance (or any <code>BaseCheckpointSaver</code>). Combined with the agent\'s built-in state management, you get the same multi-turn memory as exercise 07 without manual graph setup.' },
       { name: 'middleware',
         from: 'deepagents architecture',
-        detail: 'DeepAgents\' extension mechanism. Each middleware adds tools and/or modifies the system prompt. Defaults: <code>FilesystemMiddleware</code> (file tools), <code>SubAgentMiddleware</code> (<code>task</code> tool), <code>SkillsMiddleware</code> (SKILL.md loading), <code>SummarizationMiddleware</code> (context management). You can add custom middleware via the <code>middleware</code> parameter. Di-agent-ui uses the defaults without custom middleware — the customization happens through skills and system prompt.' }
+        detail: 'DeepAgents\' extension mechanism. Each middleware adds tools and/or modifies the system prompt. Defaults: <code>FilesystemMiddleware</code> (file tools), <code>SubAgentMiddleware</code> (<code>task</code> tool), <code>SkillsMiddleware</code> (SKILL.md loading), <code>SummarizationMiddleware</code> (context management). You can add custom middleware via the <code>middleware</code> parameter.' }
     ],
-    code: `const agent = createDeepAgent({
-  model,
-  tools,  // same get_weather + search_flights
-  checkpointer: new MemorySaver(),
-  backend: new FilesystemBackend({ rootDir: exerciseDir }),
-  skills: ["skills/"],  // loads SKILL.md files → system prompt
+    code: `const backend = new FilesystemBackend({
+  rootDir: exerciseDir, virtualMode: true,
+});
+const agent = createDeepAgent({
+  model, tools,
+  backend,
+  skills: ["skills/"],  // loads skills/*/SKILL.md metadata
   name: "travel-agent",
 });
 
-// Same .invoke() as createAgent (ex05) and StateGraph (ex06)
-const result = await agent.invoke(
-  { messages: [new HumanMessage("Plan a trip to Bali")] },
-  { configurable: { thread_id: "trip-1" } },
-);
-// Skills guide behavior: weather first, then flights, then summary`,
+// "Capital of Japan?" → plain answer, no skill influence
+// "Plan a trip to Bali" → read_file(SKILL.md) → procedure
+//   Trace: read_file → get_weather x2 → search_flights
+//   Output: === TRAVEL CARD === (strict format from skill)
+const result = await agent.invoke({ messages: [msg] });`,
     prereqs: ['05', '07'],
     shared: [
       { concept: 'agent limitations', targets: ['09'] }

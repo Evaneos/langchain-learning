@@ -155,6 +155,28 @@ export function writeChunkText(chunk: AIMessageChunk): void {
 }
 
 /**
+ * Log skill definitions loaded by DeepAgents' SkillsMiddleware.
+ * Each entry has: name, description, path, allowedTools, metadata.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- skillsMetadata not in DeepAgent's public type
+export function logLoadedSkills(agentResult: any): void {
+  const skills = agentResult.skillsMetadata as Array<{
+    name: string; description: string; path: string;
+    allowedTools?: string[]; metadata?: Record<string, string>;
+  }> | undefined;
+  if (!skills?.length) {
+    console.log("  Loaded skills: (none)");
+    return;
+  }
+  console.log("  Loaded skills:");
+  for (const s of skills) {
+    console.log(`    [${s.name}] ${s.description}`);
+    console.log(`      path: ${s.path}`);
+    if (s.allowedTools?.length) console.log(`      allowedTools: ${s.allowedTools.join(", ")}`);
+  }
+}
+
+/**
  * Log a compact summary of each message in a conversation (graph result).
  */
 export function logConversation(messages: BaseMessage[]): void {
