@@ -29,6 +29,11 @@
     --da-border: rgba(251, 146, 60, 0.25);
     --da-line: rgba(251, 146, 60, 0.4);
     --da-label: #fdba74;
+    --front-glow: #f472b6;
+    --front-bg: rgba(244, 114, 182, 0.06);
+    --front-border: rgba(244, 114, 182, 0.25);
+    --front-line: rgba(244, 114, 182, 0.4);
+    --front-label: #f9a8d4;
     --shared-glow: #a78bfa;
     --node-future-opacity: 0.35;
   }
@@ -51,7 +56,8 @@
     background:
       radial-gradient(ellipse 800px 400px at 30% 20%, rgba(52, 211, 153, 0.04), transparent),
       radial-gradient(ellipse 600px 500px at 70% 50%, rgba(56, 189, 248, 0.03), transparent),
-      radial-gradient(ellipse 500px 400px at 50% 85%, rgba(251, 146, 60, 0.03), transparent);
+      radial-gradient(ellipse 500px 400px at 50% 85%, rgba(251, 146, 60, 0.03), transparent),
+      radial-gradient(ellipse 600px 400px at 60% 95%, rgba(244, 114, 182, 0.03), transparent);
     pointer-events: none;
     z-index: 0;
   }
@@ -80,7 +86,7 @@
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--lc-glow), var(--lg-glow), var(--da-glow));
+    background: linear-gradient(135deg, var(--lc-glow), var(--lg-glow), var(--da-glow), var(--front-glow));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -212,6 +218,12 @@
     filter: drop-shadow(0 0 3px currentColor);
   }
 
+  /* Cross-section connections: dim by default, reveal on hover */
+  .conn-cross-section { opacity: 0.1; transition: opacity 0.3s, stroke-width 0.2s, filter 0.2s; }
+  .conn-cross-section.conn-highlight { opacity: 1; }
+  .arrow-cross-section { opacity: 0; transition: opacity 0.3s; }
+  .arrow-cross-section.conn-highlight { opacity: 1; }
+
   .conn-arrow {
     stroke: none;
     stroke-width: 0;
@@ -271,6 +283,7 @@
   .layer--lc .layer-label { color: var(--lc-label); background: rgba(52, 211, 153, 0.06); backdrop-filter: blur(8px); border: 1px solid var(--lc-border); }
   .layer--lg .layer-label { color: var(--lg-label); background: rgba(56, 189, 248, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--lg-border); }
   .layer--da .layer-label { color: var(--da-label); background: rgba(251, 146, 60, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--da-border); }
+  .layer--front .layer-label { color: var(--front-label); background: rgba(244, 114, 182, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--front-border); }
 
   /* LangChain: 2x2 grid — gives room for diagonal connections */
   .layer--lc .layer-nodes {
@@ -293,6 +306,13 @@
     display: flex;
     justify-content: center;
     gap: 140px;
+  }
+
+  /* Vercel AI SDK: row of 3 */
+  .layer--front .layer-nodes {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
   }
 
   /* ── NODE ── */
@@ -391,6 +411,7 @@
   .layer--lc .node-number { background: var(--lc-bg); color: var(--lc-label); border: 1px solid var(--lc-border); }
   .layer--lg .node-number { background: var(--lg-bg); color: var(--lg-label); border: 1px solid var(--lg-border); }
   .layer--da .node-number { background: var(--da-bg); color: var(--da-label); border: 1px solid var(--da-border); }
+  .layer--front .node-number { background: var(--front-bg); color: var(--front-label); border: 1px solid var(--front-border); }
 
   .node-status {
     width: 8px;
@@ -1200,11 +1221,75 @@
   }
 
   /* ── RESPONSIVE ── */
+  /* ── BRANCHES SECTION (09-13) ── */
+  .branches-section {
+    position: relative;
+    z-index: 2;
+    margin-top: 60px;
+    padding-top: 32px;
+  }
+
+  .branches-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(80%, 500px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+
+  .branches-section-label {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+  }
+
+  .branches-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 60px 80px;
+    max-width: 800px;
+    margin: 0 auto;
+    justify-items: center;
+  }
+
+  /* Grid positions for branch nodes */
+  .branches-grid .node[data-id="09"] { grid-column: 1; grid-row: 1; }
+  .branches-grid .node[data-id="11"] { grid-column: 2; grid-row: 1; }
+  .branches-grid .node[data-id="12"] { grid-column: 3; grid-row: 1; }
+  .branches-grid .node[data-id="10"] { grid-column: 1; grid-row: 2; }
+  .branches-grid .node[data-id="13"] { grid-column: 2; grid-row: 2; }
+
+  /* data-layer selectors — work in BOTH trunk and branches sections */
+  .node[data-layer="lc"] .node-number { background: var(--lc-bg); color: var(--lc-label); border: 1px solid var(--lc-border); }
+  .node[data-layer="lg"] .node-number { background: var(--lg-bg); color: var(--lg-label); border: 1px solid var(--lg-border); }
+  .node[data-layer="da"] .node-number { background: var(--da-bg); color: var(--da-label); border: 1px solid var(--da-border); }
+  .node[data-layer="front"] .node-number { background: var(--front-bg); color: var(--front-label); border: 1px solid var(--front-border); }
+
   @media (max-width: 900px) {
     .layer--lc .layer-nodes { max-width: 440px; gap: 40px 80px; }
     .layer--lg .layer-nodes { flex-wrap: wrap; gap: 24px; }
     .node { width: 160px; min-height: 85px; }
     .header h1 { font-size: 1.5rem; }
+    .branches-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .branches-grid .node[data-id="09"],
+    .branches-grid .node[data-id="10"],
+    .branches-grid .node[data-id="11"],
+    .branches-grid .node[data-id="12"],
+    .branches-grid .node[data-id="13"] {
+      grid-column: 1;
+      grid-row: auto;
+    }
   }
 </style>
 </head>
@@ -1252,9 +1337,10 @@ const legendEl = document.getElementById('legend');
 
 // ── Render legend with hover tooltips ──
 const LEGEND_ITEMS = [
-  { layer: 'lc', range: '01-04' },
-  { layer: 'lg', range: '05-08' },
-  { layer: 'da', range: '09-10' }
+  { layer: 'lc', range: '01-04, 12' },
+  { layer: 'lg', range: '05-07, 10-11' },
+  { layer: 'da', range: '08-09' },
+  { layer: 'front', range: '13' }
 ];
 
 LEGEND_ITEMS.forEach(({ layer, range }) => {
@@ -1278,10 +1364,37 @@ prereqItem.className = 'legend-item';
 prereqItem.innerHTML = `<div class="legend-line" style="background: var(--lc-glow); opacity: 0.5"></div> Prerequisite`;
 legendEl.appendChild(prereqItem);
 
-const layerOrder = ['lc', 'lg', 'da'];
+// Helper: create a node element for an exercise
+function createNodeEl(ex, animDelay) {
+  const meta = LAYER_META[ex.layer];
+  const node = document.createElement('div');
+  node.className = `node ${ex.done ? 'node--done' : 'node--future'}`;
+  node.dataset.id = ex.id;
+  node.dataset.layer = ex.layer;
+  node.style.setProperty('--glow-color', meta.glowColor);
+  node.style.animationDelay = `${animDelay}s`;
 
-layerOrder.forEach((layerId, layerIdx) => {
-  const exercises = EXERCISES.filter(e => e.layer === layerId);
+  node.innerHTML = `
+    <div class="node-header">
+      <span class="node-number">${ex.id}</span>
+      <span class="node-status ${ex.done ? 'node-status--done' : 'node-status--future'}"></span>
+    </div>
+    <div class="node-title">${ex.title}</div>
+    <div class="node-concepts">${ex.concepts}</div>
+  `;
+
+  node.addEventListener('mouseenter', (e) => showTooltip(e, ex));
+  node.addEventListener('mouseleave', hideTooltip);
+  node.addEventListener('click', () => showDetail(ex, meta));
+
+  return node;
+}
+
+// ── Phase 1: Trunk layers (01-08) with layer bands ──
+const trunkLayers = ['lc', 'lg', 'da'];
+
+trunkLayers.forEach((layerId, layerIdx) => {
+  const exercises = EXERCISES.filter(e => e.section === 'trunk' && e.layer === layerId);
   if (!exercises.length) return;
   const meta = LAYER_META[layerId];
 
@@ -1300,31 +1413,34 @@ layerOrder.forEach((layerId, layerIdx) => {
   nodesContainer.className = 'layer-nodes';
 
   exercises.forEach((ex, nodeIdx) => {
-    const node = document.createElement('div');
-    node.className = `node ${ex.done ? 'node--done' : 'node--future'}`;
-    node.dataset.id = ex.id;
-    node.style.setProperty('--glow-color', meta.glowColor);
-    node.style.animationDelay = `${layerIdx * 0.2 + nodeIdx * 0.1}s`;
-
-    node.innerHTML = `
-      <div class="node-header">
-        <span class="node-number">${ex.id}</span>
-        <span class="node-status ${ex.done ? 'node-status--done' : 'node-status--future'}"></span>
-      </div>
-      <div class="node-title">${ex.title}</div>
-      <div class="node-concepts">${ex.concepts}</div>
-    `;
-
-    node.addEventListener('mouseenter', (e) => showTooltip(e, ex));
-    node.addEventListener('mouseleave', hideTooltip);
-    node.addEventListener('click', () => showDetail(ex, meta));
-
-    nodesContainer.appendChild(node);
+    nodesContainer.appendChild(createNodeEl(ex, layerIdx * 0.2 + nodeIdx * 0.1));
   });
 
   layerEl.appendChild(nodesContainer);
   container.appendChild(layerEl);
 });
+
+// ── Phase 2: Branches section (09-13) ──
+const branchExercises = EXERCISES.filter(e => e.section === 'branches');
+if (branchExercises.length) {
+  const section = document.createElement('div');
+  section.className = 'branches-section';
+
+  const sectionLabel = document.createElement('div');
+  sectionLabel.className = 'branches-section-label';
+  sectionLabel.textContent = 'Integration \u2014 di-agent-ui';
+  section.appendChild(sectionLabel);
+
+  const grid = document.createElement('div');
+  grid.className = 'branches-grid';
+
+  branchExercises.forEach((ex, i) => {
+    grid.appendChild(createNodeEl(ex, 0.8 + i * 0.1));
+  });
+
+  section.appendChild(grid);
+  container.appendChild(section);
+}
 
 // ════════════════════════════════════════════════════════════
 // SVG CONNECTIONS — smart routing
@@ -1403,7 +1519,34 @@ function createSVG() {
       const cp = dist * 0.35;
       return `M ${from.x} ${from.y} C ${from.x + (goingRight ? cp : -cp)} ${from.y}, ${to.x + (goingRight ? -cp : cp)} ${to.y}, ${to.x} ${to.y}`;
     } else {
-      // Cross-layer connection — detect direction
+      // Check if this is a long cross-section connection (trunk → branches)
+      // that should route laterally to avoid crossing through intermediate nodes
+      const sourceEx = EXERCISES.find(e => e.id === fromId);
+      const targetEx = EXERCISES.find(e => e.id === toId);
+      const needsLateral = sourceEx && targetEx &&
+        sourceEx.section === 'trunk' && targetEx.section === 'branches' &&
+        sourceEx.layer !== 'da'; // DA→branches is adjacent, stays direct
+
+      if (needsLateral) {
+        // Route via lateral arc: exit bottom → swing to RIGHT edge → enter top
+        // Always right to avoid layer labels on the left
+        const from = getEdge(fromId, 'bottom');
+        const to = getEdge(toId, 'top');
+        to.y -= GAP;
+        const dy = to.y - from.y;
+
+        const edgeX = cw - 20;
+        const corridorX = from.x + (edgeX - from.x) * 0.65;
+
+        const cp1x = corridorX;
+        const cp1y = from.y + dy * 0.3;
+        const cp2x = to.x + (corridorX - to.x) * 0.2;
+        const cp2y = to.y - dy * 0.3;
+
+        return `M ${from.x} ${from.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${to.x} ${to.y}`;
+      }
+
+      // Adjacent cross-layer connection — direct bezier
       const goingDown = fr.cy < tr.cy;
       if (goingDown) {
         // Downward: bottom → top
@@ -1435,9 +1578,14 @@ function createSVG() {
       const color = LAYER_META[sourceEx.layer].lineColor;
       const delay = `${i * 0.06}s`;
 
+      // Detect cross-section connections (trunk → branches)
+      const isCrossSection = sourceEx.section === 'trunk' &&
+        EXERCISES.find(e => e.id === ex.id)?.section === 'branches';
+
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
       path.classList.add('conn-prereq');
+      if (isCrossSection) path.classList.add('conn-cross-section');
       path.style.stroke = color;
       path.style.animationDelay = delay;
       path.dataset.from = prereqId;
@@ -1463,6 +1611,7 @@ function createSVG() {
       const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
       arrow.setAttribute('points', `${bx1},${by1} ${tip.x},${tip.y} ${bx2},${by2}`);
       arrow.classList.add('conn-arrow');
+      if (isCrossSection) arrow.classList.add('arrow-cross-section');
       arrow.style.fill = color;
       arrow.style.animationDelay = `${parseFloat(delay) + 0.5}s`;
       arrow.dataset.from = prereqId;
@@ -1592,7 +1741,8 @@ function clearHighlights() {
 const LAYER_COLORS = {
   lc: { accent: '#34d399', accentBg: 'rgba(52, 211, 153, 0.06)', label: '#6ee7b7', bg: 'rgba(52, 211, 153, 0.08)', border: 'rgba(52, 211, 153, 0.25)' },
   lg: { accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.05)', label: '#7dd3fc', bg: 'rgba(56, 189, 248, 0.06)', border: 'rgba(56, 189, 248, 0.2)' },
-  da: { accent: '#fb923c', accentBg: 'rgba(251, 146, 60, 0.05)', label: '#fdba74', bg: 'rgba(251, 146, 60, 0.06)', border: 'rgba(251, 146, 60, 0.2)' }
+  da: { accent: '#fb923c', accentBg: 'rgba(251, 146, 60, 0.05)', label: '#fdba74', bg: 'rgba(251, 146, 60, 0.06)', border: 'rgba(251, 146, 60, 0.2)' },
+  front: { accent: '#f472b6', accentBg: 'rgba(244, 114, 182, 0.05)', label: '#f9a8d4', bg: 'rgba(244, 114, 182, 0.06)', border: 'rgba(244, 114, 182, 0.2)' }
 };
 
 // Current detail state — needed for API inspect back navigation

@@ -39,6 +39,10 @@ See `docs/ROADMAP.md` for the exercise plan (Section 1: Core, Section 2: Advance
 - **Always work on `main`** — no feature branches, no PRs. Direct commits only.
 - See `exercises/CLAUDE.md` for exercise-specific conventions.
 
+## Browser
+
+- **Never open files/URLs automatically** — always ask the user to check themselves.
+
 ## Key context about di-agent-ui
 
 ### Architecture overview

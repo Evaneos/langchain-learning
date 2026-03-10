@@ -4,7 +4,7 @@
 
 const EXERCISES = [
   {
-    id: '01', title: 'Hello LLM', layer: 'lc', done: true,
+    id: '01', section: 'trunk', title: 'Hello LLM', layer: 'lc', done: true,
     concepts: 'invoke, messages, metadata',
     insights: [
       '<strong>ChatAnthropic, ChatOpenAI, ChatGoogle</strong> — same interface. Learn <code>.invoke()</code> once, switch providers with one line.',
@@ -47,11 +47,11 @@ console.log(response.content);
     prereqs: [],
     shared: [
       { concept: 'stop_reason', targets: ['03', '04'] },
-      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11'] }
+      { concept: 'messages', targets: ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13'] }
     ]
   },
   {
-    id: '02', title: 'Structured Output', layer: 'lc', done: true,
+    id: '02', section: 'trunk', title: 'Structured Output', layer: 'lc', done: true,
     concepts: 'structured output, Zod schemas',
     insights: [
       'Structured output <strong>IS</strong> tool calling in disguise. <code>.withStructuredOutput()</code> converts your Zod schema into a hidden tool the model "calls" to produce JSON.',
@@ -87,7 +87,7 @@ console.log(result.family_score); // number, not string`,
     shared: [{ concept: 'Zod schemas', targets: ['03'] }]
   },
   {
-    id: '03', title: 'Tools', layer: 'lc', done: true,
+    id: '03', section: 'trunk', title: 'Tools', layer: 'lc', done: true,
     concepts: 'tools, tool calls, manual dispatch',
     insights: [
       'The model <strong>never executes anything</strong>. <code>tool_calls</code> is a polite request — YOU run the function, then report back with <code>ToolMessage</code>.',
@@ -141,7 +141,7 @@ const answer = await modelWithTools.invoke([
     shared: [{ concept: 'tool loop', targets: ['04', '05'] }]
   },
   {
-    id: '04', title: 'Streaming', layer: 'lc', done: true,
+    id: '04', section: 'trunk', title: 'Streaming', layer: 'lc', done: true,
     concepts: 'streaming, chunks, for await',
     insights: [
       'Streaming changes <strong>when</strong>, not <strong>what</strong>. The same <code>AIMessage</code> arrives — just time-sliced into chunks.',
@@ -183,10 +183,10 @@ for await (const chunk of stream) {
 // Reconstruct full message from chunks
 const full = chunks.reduce((acc, c) => acc.concat(c));`,
     prereqs: ['01', '03'],
-    shared: [{ concept: 'streaming', targets: ['11'] }]
+    shared: [{ concept: 'streaming', targets: ['11', '13'] }]
   },
   {
-    id: '05', title: 'createAgent', layer: 'lg', done: true,
+    id: '05', section: 'trunk', title: 'createAgent', layer: 'lg', done: true,
     concepts: 'react agent, auto tool loop, streamMode',
     insights: [
       'An "agent" is not a new abstraction — it\'s the manual tool loop from exercise 03, automated as a <strong>2-node graph</strong> with one conditional edge.',
@@ -235,7 +235,7 @@ for await (const [message, metadata] of stream) {
     shared: [{ concept: 'agent graph', targets: ['06', '08'] }]
   },
   {
-    id: '06', title: 'StateGraph', layer: 'lg', done: true,
+    id: '06', section: 'trunk', title: 'StateGraph', layer: 'lg', done: true,
     concepts: 'state graph, nodes, edges, custom state, pre/post-processing',
     insights: [
       '<code>createAgent</code> is just <strong>5 lines of StateGraph</strong>: 2 nodes, 3 edges, 1 conditional. Once you see it, "agent" stops being magic.',
@@ -301,7 +301,7 @@ const result = await graph.invoke({ messages: [msg] });`,
     ]
   },
   {
-    id: '07', title: 'Checkpointing', layer: 'lg', done: true,
+    id: '07', section: 'trunk', title: 'Checkpointing', layer: 'lg', done: true,
     concepts: 'memory, persistence, thread isolation, state inspection',
     insights: [
       '<code>.compile({ checkpointer })</code> is the <strong>only change</strong> vs exercise 06. Same graph, but now every node execution saves a snapshot. Memory is opt-in, not architectural.',
@@ -346,7 +346,7 @@ await graph.invoke({ messages: [msg2] }, config);`,
     ]
   },
   {
-    id: '08', title: 'DeepAgents', layer: 'da', done: true,
+    id: '08', section: 'trunk', title: 'DeepAgents', layer: 'da', done: true,
     concepts: 'createDeepAgent, skills, middleware, FilesystemBackend, progressive disclosure',
     insights: [
       'DeepAgents is <strong>middleware on top of ReactAgent</strong>. Every feature — skills, filesystem tools, subagents, summarization — is a pluggable middleware layer, not a new architecture.',
@@ -400,21 +400,35 @@ const result = await agent.invoke({ messages: [msg] });`,
     ]
   },
   {
-    id: '09', title: 'Subagents, Store & Limites', layer: 'da', done: false,
+    id: '09', section: 'branches', title: 'Subagents, Store & Limites', layer: 'da', done: false,
     concepts: 'subagents, task tool, store, backends, custom middleware, abstraction limits',
     apis: [], prereqs: ['08'], shared: [
       { concept: 'abstraction trade-off', targets: ['10'] }
     ]
   },
   {
-    id: '10', title: 'Hooks & Callbacks', layer: 'lg', done: false,
+    id: '10', section: 'branches', title: 'Hooks & Callbacks', layer: 'lg', done: false,
     concepts: 'BaseCallbackHandler, lifecycle events, RunnableConfig callbacks, stream events',
     apis: [], prereqs: ['07', '09'], shared: []
   },
   {
-    id: '11', title: 'Vercel AI SDK', layer: 'front', done: false,
-    concepts: 'useChat, streaming UI, pont LangChain → React',
-    apis: [], prereqs: ['04', '05'], shared: []
+    id: '11', section: 'branches', title: 'Stream Pipeline', layer: 'lg', done: false,
+    concepts: 'parseLangChainStream, StreamEvent, StreamEventProcessor, progressive JSON accumulation',
+    apis: [], prereqs: ['05'], shared: [
+      { concept: 'stream events', targets: ['13'] }
+    ]
+  },
+  {
+    id: '12', section: 'branches', title: 'Message Conversion', layer: 'lc', done: false,
+    concepts: 'UIMessage ↔ BaseMessage, segmentation, tool-result boundaries, backward compat',
+    apis: [], prereqs: ['03'], shared: [
+      { concept: 'message formats', targets: ['13'] }
+    ]
+  },
+  {
+    id: '13', section: 'branches', title: 'Vercel AI SDK', layer: 'front', done: false,
+    concepts: 'useChat, streaming UI, pont LangChain → React, end-to-end',
+    apis: [], prereqs: ['11', '12'], shared: []
   }
 ];
 
