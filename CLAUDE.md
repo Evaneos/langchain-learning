@@ -34,9 +34,10 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 
 See `docs/ROADMAP.md` for the exercise plan (Section 1: Core, Section 2: Advanced patterns).
 
-## Git workflow for exercises
+## Git workflow
 
-See `exercises/CLAUDE.md` for detailed conventions.
+- **Always work on `main`** — no feature branches, no PRs. Direct commits only.
+- See `exercises/CLAUDE.md` for exercise-specific conventions.
 
 ## Key context about di-agent-ui
 
