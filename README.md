@@ -2,7 +2,9 @@
 
 Repo d'apprentissage pour comprendre l'écosystème **LangChain / LangGraph / DeepAgents** à travers des exercices progressifs.
 
-**[Learning Map](https://evaneos.github.io/langchain-learning/)** — visualisation interactive du parcours d'apprentissage.
+<a href="https://evaneos.github.io/langchain-learning/">
+  <img src="docs/learning-map-banner.svg" alt="Learning Map — Interactive skill tree" width="100%">
+</a>
 
 ## Hiérarchie des librairies
 
