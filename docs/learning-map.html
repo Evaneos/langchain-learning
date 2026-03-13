@@ -1291,6 +1291,49 @@
       grid-row: auto;
     }
   }
+
+  /* ── HIERARCHY BANNER ── */
+  .hierarchy-banner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    margin: 0 auto 4px;
+    max-width: 640px;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+
+  .hierarchy-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .hierarchy-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .hierarchy-role {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .hierarchy-arrow {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin: 0 2px;
+    align-self: center;
+  }
 </style>
 </head>
 <body>
@@ -1298,6 +1341,23 @@
 <div class="header">
   <h1>LangChain Learning Path</h1>
   <p>Skill tree — hover for APIs, click for details</p>
+</div>
+
+<div class="hierarchy-banner">
+  <div class="hierarchy-item">
+    <span class="hierarchy-name" style="color: var(--lg-label)">LangGraph</span>
+    <span class="hierarchy-role">agent runtime</span>
+  </div>
+  <span class="hierarchy-arrow">&larr;</span>
+  <div class="hierarchy-item">
+    <span class="hierarchy-name" style="color: var(--lc-label)">LangChain</span>
+    <span class="hierarchy-role">agent framework</span>
+  </div>
+  <span class="hierarchy-arrow">&larr;</span>
+  <div class="hierarchy-item">
+    <span class="hierarchy-name" style="color: var(--da-label)">DeepAgents</span>
+    <span class="hierarchy-role">agent harness</span>
+  </div>
 </div>
 
 <div class="legend" id="legend"></div>

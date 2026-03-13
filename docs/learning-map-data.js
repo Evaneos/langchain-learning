@@ -582,24 +582,24 @@ const LAYER_META = {
     className: 'layer--lc',
     glowColor: 'var(--lc-glow)',
     lineColor: 'var(--lc-line)',
-    tagline: 'SDK for LLM interaction — models, messages, tools',
-    tooltip: '<strong>LangChain</strong> is the foundational SDK. It provides a unified interface to call any LLM (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>…), structure inputs/outputs with schemas, and define tools. Think of it as the <strong>building blocks</strong>: you write each step yourself.'
+    tagline: 'Agent framework — models, messages, tools',
+    tooltip: '<strong>LangChain</strong> is the <strong>agent framework</strong>. It provides a unified interface to call any LLM (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>…), structure inputs/outputs with schemas, and define tools. Think of it as the <strong>building blocks</strong>: you write each step yourself.'
   },
   lg: {
     label: 'LangGraph',
     className: 'layer--lg',
     glowColor: 'var(--lg-glow)',
     lineColor: 'var(--lg-line)',
-    tagline: 'Orchestration framework — graphs, state, agent loops',
-    tooltip: '<strong>LangGraph</strong> sits on top of LangChain. It orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop. You gain control over flow, memory, and human-in-the-loop.'
+    tagline: 'Agent runtime — graphs, state, agent loops',
+    tooltip: '<strong>LangGraph</strong> is the <strong>agent runtime</strong>. It sits on top of LangChain and orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop. You gain control over flow, memory, and human-in-the-loop.'
   },
   da: {
     label: 'DeepAgents',
     className: 'layer--da',
     glowColor: 'var(--da-glow)',
     lineColor: 'var(--da-line)',
-    tagline: 'Opinionated agent wrapper — skills, middleware, store',
-    tooltip: '<strong>DeepAgents</strong> wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. The convenience/control trade-off: 80% instantly, but custom nodes are the escape hatch.'
+    tagline: 'Agent harness — skills, middleware, store',
+    tooltip: '<strong>DeepAgents</strong> is the <strong>agent harness</strong>. It wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. The convenience/control trade-off: 80% instantly, but custom nodes are the escape hatch.'
   },
   front: {
     label: 'Vercel AI SDK',
