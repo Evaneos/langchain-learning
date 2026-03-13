@@ -400,10 +400,68 @@ const result = await agent.invoke({ messages: [msg] });`,
     ]
   },
   {
-    id: '09', section: 'branches', title: 'Subagents, Store & Limites', layer: 'da', done: false,
-    concepts: 'subagents, task tool, store, backends, custom middleware, abstraction limits',
-    apis: [], prereqs: ['08'], shared: [
-      { concept: 'abstraction trade-off', targets: ['10'] }
+    id: '09', section: 'branches', title: 'Subagents, Store & Limites', layer: 'da', done: true,
+    concepts: 'subagents, task tool, backends, request-scoped tools, custom middleware, limits vs StateGraph',
+    insights: [
+      'Subagents are <strong>managed delegation</strong>: the main agent has a <code>task</code> tool injected by SubAgentMiddleware. It picks which subagent to call based on <code>description</code> — like a manager assigning work to specialists.',
+      '<code>StateBackend.write()</code> returns <code>filesUpdate</code> (a diff for LangGraph\'s state reducer). <code>StoreBackend.write()</code> returns <code>filesUpdate: null</code> (already persisted). This is the core API contract that separates ephemeral from persistent storage.',
+      'Request-scoped tools via <strong>closures</strong> inject invisible context (sessionId, userId) into tools. The LLM never sees these params — they\'re baked in at tool creation time. One factory, many instances.',
+      'DeepAgents = <strong>single agent loop</strong>. You can\'t add mandatory validation nodes, conditional edges, or parallel branches. For deterministic flow control, you need StateGraph.'
+    ],
+    apis: [
+      { name: 'subagents',
+        from: 'createDeepAgent options',
+        detail: 'Array of <code>SubAgent</code> specs: <code>{ name, description, systemPrompt, tools }</code>. Each becomes a selectable target for the <code>task</code> tool injected by <code>SubAgentMiddleware</code>. The model reads descriptions to decide which subagent to delegate to. Subagents run in isolation — state is filtered via <code>EXCLUDED_STATE_KEYS</code> (messages, todos, skillsMetadata removed).' },
+      { name: 'task tool',
+        from: 'SubAgentMiddleware',
+        signature: 'task({ description, subagent_type })',
+        detail: 'Auto-injected tool for delegating work. <code>description</code> tells the subagent what to do, <code>subagent_type</code> selects which subagent handles it. Under the hood, it creates a fresh agent with the subagent\'s tools and system prompt, runs it, and returns the result. A <code>general-purpose</code> subagent is added by default (inherits main agent\'s skills).' },
+      { name: 'StateBackend',
+        from: 'deepagents',
+        signature: 'new StateBackend({ state })',
+        detail: 'Ephemeral file storage in agent state. <code>write()</code> returns <code>{ filesUpdate }</code> — a diff that the middleware applies to <code>state.files</code> via LangGraph\'s reducer. When the invocation ends and state is garbage-collected, files disappear. Fast and simple but not persistent.' },
+      { name: 'StoreBackend',
+        from: 'deepagents',
+        signature: 'new StoreBackend({ state, store }, { namespace })',
+        detail: 'Persistent file storage via LangGraph\'s <code>BaseStore</code>. <code>write()</code> persists directly to the store and returns <code>{ filesUpdate: null }</code>. <code>namespace</code> isolates data per user/org (multi-tenant). Use <code>InMemoryStore</code> for dev, Redis-backed store for production.' },
+      { name: 'CompositeBackend',
+        from: 'deepagents',
+        signature: 'new CompositeBackend(defaultBackend, { "/prefix/": routedBackend })',
+        detail: 'Routes file operations by path prefix. Keys must start with <code>/</code> to match absolute paths. Pattern: scratch files to <code>StateBackend</code> (default), persistent data to <code>StoreBackend</code> (routed by prefix like <code>/persist/</code>).' },
+      { name: 'createMiddleware()',
+        from: 'langchain',
+        signature: 'createMiddleware({ name, stateSchema?, hooks... })',
+        detail: 'Creates custom middleware with lifecycle hooks: <code>beforeAgent</code>, <code>beforeModel</code>, <code>afterModel</code>, <code>wrapToolCall</code>, <code>wrapModelCall</code>, <code>afterAgent</code>. Optional <code>stateSchema</code> (Zod) for persisted state between invocations, <code>contextSchema</code> for per-invocation read-only context, and <code>tools</code> to inject additional tools.' },
+      { name: 'InMemoryStore',
+        from: '@langchain/langgraph',
+        detail: 'In-memory implementation of LangGraph\'s <code>BaseStore</code>. Same API as production stores (Redis, PostgreSQL). Used with <code>StoreBackend</code> for cross-conversation persistence without external infrastructure. Data lost on process restart — swap for a database-backed store in production.' }
+    ],
+    code: `// Subagents: main agent delegates via task tool
+const agent = createDeepAgent({
+  model,
+  tools: [],  // no domain tools → forces delegation
+  subagents: [
+    { name: "weather-expert",
+      description: "Weather analysis for any destination",
+      systemPrompt: "You are a weather expert.",
+      tools: [getWeatherTool] },
+    { name: "flight-expert",
+      description: "Flight search between cities",
+      systemPrompt: "You are a flight booking expert.",
+      tools: [searchFlightsTool] },
+  ],
+});
+// agent internally calls: task({ subagent_type: "weather-expert" })
+
+// Request-scoped tools: closure captures invisible context
+function createTools(sessionId: string) {
+  return [tool(async () => fetchPrefs(sessionId),
+    { name: "get_prefs", schema: z.object({}) })];
+}`,
+    prereqs: ['08'],
+    shared: [
+      { concept: 'abstraction trade-off', targets: ['10'] },
+      { concept: 'StateGraph vs DeepAgents', targets: ['06'] }
     ]
   },
   {
@@ -570,6 +628,34 @@ const result = await agent.invoke({ messages: [msg] });
   name: "travel-agent",
 });
 // Same .invoke() — but behavior guided by skills
+const result = await agent.invoke({ messages: [msg] });`,
+      },
+    ],
+  },
+  {
+    from: '08', to: '09',
+    blocks: [
+      {
+        legend: '<code>createDeepAgent({ tools })</code> → <code>createDeepAgent({ subagents })</code> — domain tools move to specialized subagents, main agent becomes a coordinator.',
+        before: `const agent = createDeepAgent({
+  model,
+  tools: [getWeatherTool, searchFlightsTool],
+  name: "travel-agent",
+});
+// Agent calls tools directly
+const result = await agent.invoke({ messages: [msg] });`,
+        after: `const agent = createDeepAgent({
+  model,
+  tools: [],  // no domain tools
+  subagents: [
+    { name: "weather-expert",
+      tools: [getWeatherTool], ... },
+    { name: "flight-expert",
+      tools: [searchFlightsTool], ... },
+  ],
+});
+// Agent delegates via task tool
+// task({ subagent_type: "weather-expert", ... })
 const result = await agent.invoke({ messages: [msg] });`,
       },
     ],

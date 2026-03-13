@@ -14,7 +14,7 @@ Chemin principal : LangChain → LangGraph → DeepAgents → intégration front
 | 06 | StateGraph | LG | done |
 | 07 | Checkpointing | LG | done |
 | 08 | DeepAgents | DA | done |
-| 09 | Subagents, Store & Limites | DA | todo — subagents (`task` tool), Store cross-conversation, backends (State/Store/Composite), middleware custom, limites de l'abstraction vs StateGraph. **+ inclure** : tools request-scoped (closure sessionId), Redis persistence, suggestion hydration pattern |
+| 09 | Subagents, Store & Limites | DA | done |
 | 10 | Hooks & Callbacks | LG | todo — ce que DeepAgents cache : BaseCallbackHandler, lifecycle events (on_llm_start, on_tool_start…), RunnableConfig callbacks, stream events |
 | 11 | Stream Pipeline | LG | todo — parseLangChainStream → StreamEvent neutres, StreamEventProcessor, accumulation progressive JSON des tool args |
 | 12 | Message Conversion | LC | todo — UIMessage ↔ BaseMessage, segmentation aux boundaries tool-result, backward compat |
