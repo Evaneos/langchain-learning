@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -279,6 +279,29 @@
     opacity: 0.7;
     line-height: 1.4;
   }
+
+  .layer-builds-on {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    font-style: italic;
+    white-space: nowrap;
+    pointer-events: none;
+    padding: 6px 12px 6px 10px;
+    line-height: 1.45;
+    border-radius: 0 6px 6px 0;
+    opacity: 0.7;
+  }
+
+  .layer--lc .layer-builds-on { background: rgba(52, 211, 153, 0.06); border: 1px solid var(--lc-border); border-left: none; }
+  .layer--lg .layer-builds-on { background: rgba(56, 189, 248, 0.05); border: 1px solid var(--lg-border); border-left: none; }
+  .layer--da .layer-builds-on { background: rgba(251, 146, 60, 0.05); border: 1px solid var(--da-border); border-left: none; }
+  .layer--front .layer-builds-on { background: rgba(244, 114, 182, 0.05); border: 1px solid var(--front-border); border-left: none; }
 
   .layer--lc .layer-label { color: var(--lc-label); background: rgba(52, 211, 153, 0.06); backdrop-filter: blur(8px); border: 1px solid var(--lc-border); }
   .layer--lg .layer-label { color: var(--lg-label); background: rgba(56, 189, 248, 0.05); backdrop-filter: blur(8px); border: 1px solid var(--lg-border); }
@@ -1292,47 +1315,232 @@
     }
   }
 
-  /* ── HIERARCHY BANNER ── */
-  .hierarchy-banner {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    justify-content: center;
+  /* ── ECOSYSTEM BUTTON ── */
+  .ecosystem-btn {
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 24px;
-    margin: 0 auto 4px;
-    max-width: 640px;
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    font-size: 0.82rem;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
   }
 
-  .hierarchy-item {
+  .ecosystem-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+
+  /* ── ECOSYSTEM PANEL ── */
+  .eco-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 24px;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .eco-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .eco-modal {
+    width: 100%;
+    max-width: 780px;
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 32px 36px;
+    transform: translateY(12px);
+    transition: transform 0.25s;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .eco-overlay--visible .eco-modal {
+    transform: translateY(0);
+  }
+
+  .eco-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .eco-modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .eco-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  .eco-modal-close:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+  }
+
+  .eco-section { margin-bottom: 28px; }
+  .eco-section:last-child { margin-bottom: 0; }
+
+  .eco-section h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .eco-section p, .eco-section li {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .eco-section ul {
+    padding-left: 18px;
+    margin: 6px 0;
+  }
+
+  .eco-section code {
+    font-size: 0.75rem;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: var(--text-primary);
+  }
+
+  .eco-section strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .eco-diagram {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    overflow-x: auto;
+    white-space: pre;
+    margin: 10px 0;
+  }
+
+  /* ── Stack diagram ── */
+  .eco-stack {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 2px;
+    margin: 12px 0;
+  }
+
+  .eco-stack-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .eco-stack-row span { line-height: 1.4; }
+
+  .eco-stack-app {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+
+  .eco-stack-split {
+    display: flex;
     gap: 2px;
   }
 
-  .hierarchy-name {
-    font-weight: 700;
-    font-size: 0.9rem;
+  .eco-stack-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
-  .hierarchy-role {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
+  .eco-stack-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
   }
 
-  .hierarchy-arrow {
-    font-size: 1.1rem;
+  .eco-stack-da { background: rgba(251, 146, 60, 0.08); border-left: 3px solid var(--da-glow); }
+  .eco-stack-lg { background: rgba(56, 189, 248, 0.06); border-left: 3px solid var(--lg-glow); }
+  .eco-stack-lc { background: rgba(52, 211, 153, 0.06); border-left: 3px solid var(--lc-glow); }
+  .eco-stack-front { background: rgba(244, 114, 182, 0.06); border-left: 3px solid var(--front-glow); }
+
+  .eco-stack-base {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.75rem;
+  }
+
+  .eco-stack-obs {
+    padding: 8px 16px;
+    font-size: 0.72rem;
     color: var(--text-muted);
-    margin: 0 2px;
-    align-self: center;
+    text-align: center;
+  }
+
+  .eco-stack-obs strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .eco-packages {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin: 10px 0;
+  }
+
+  .eco-packages th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .eco-packages td {
+    padding: 5px 10px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
   }
 </style>
 </head>
@@ -1341,23 +1549,7 @@
 <div class="header">
   <h1>LangChain Learning Path</h1>
   <p>Skill tree — hover for APIs, click for details</p>
-</div>
-
-<div class="hierarchy-banner">
-  <div class="hierarchy-item">
-    <span class="hierarchy-name" style="color: var(--lg-label)">LangGraph</span>
-    <span class="hierarchy-role">agent runtime</span>
-  </div>
-  <span class="hierarchy-arrow">&larr;</span>
-  <div class="hierarchy-item">
-    <span class="hierarchy-name" style="color: var(--lc-label)">LangChain</span>
-    <span class="hierarchy-role">agent framework</span>
-  </div>
-  <span class="hierarchy-arrow">&larr;</span>
-  <div class="hierarchy-item">
-    <span class="hierarchy-name" style="color: var(--da-label)">DeepAgents</span>
-    <span class="hierarchy-role">agent harness</span>
-  </div>
+  <button class="ecosystem-btn" id="ecoBtn">&#9776; Ecosystem glossary</button>
 </div>
 
 <div class="legend" id="legend"></div>
@@ -1381,6 +1573,128 @@
   </div>
 </div>
 
+<div class="eco-overlay" id="ecoOverlay">
+  <div class="eco-modal">
+    <div class="eco-modal-header">
+      <div class="eco-modal-title">The AI Agent Ecosystem</div>
+      <button class="eco-modal-close" id="ecoClose">&times;</button>
+    </div>
+
+    <div class="eco-section">
+      <h3>The layers</h3>
+      <div class="eco-stack">
+        <div class="eco-stack-row eco-stack-app">
+          <span>Your App</span>
+        </div>
+        <div class="eco-stack-split">
+          <div class="eco-stack-left">
+            <div class="eco-stack-row eco-stack-da">
+              <strong style="color: var(--da-label)">DeepAgents</strong>
+              <span>Agent harness — skills, store, middleware</span>
+            </div>
+            <div class="eco-stack-row eco-stack-lg">
+              <strong style="color: var(--lg-label)">LangGraph</strong>
+              <span>Agent runtime — state machines</span>
+            </div>
+            <div class="eco-stack-row eco-stack-lc">
+              <strong style="color: var(--lc-label)">LangChain</strong>
+              <span>Agent framework — models, tools, messages, callbacks</span>
+            </div>
+          </div>
+          <div class="eco-stack-right eco-stack-front">
+            <strong style="color: var(--front-label)">Vercel AI SDK</strong>
+            <span>Streaming + React hooks</span>
+            <span>useChat(), createUI…</span>
+          </div>
+        </div>
+        <div class="eco-stack-row eco-stack-base">
+          <span>LLM Provider API (Anthropic, OpenAI, etc.)</span>
+        </div>
+        <div class="eco-stack-obs">
+          <span>Observability (side-car): <strong>LangSmith</strong> · <strong>Langfuse</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="eco-section">
+      <h3 style="color: var(--lc-label)">LangChain <code>langchain</code> <code>@langchain/core</code></h3>
+      <p><strong>Agent framework</strong> — SDK for LLM interaction.</p>
+      <ul>
+        <li><strong>Chat models</strong> (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>) — unified interface to call any LLM</li>
+        <li><strong>Messages</strong> (<code>HumanMessage</code>, <code>AIMessage</code>, <code>SystemMessage</code>, <code>ToolMessage</code>)</li>
+        <li><strong>Tools</strong> (<code>tool()</code>) — define tools with Zod schemas that LLMs can call</li>
+        <li><strong>Callbacks</strong> (<code>on_llm_start</code>, <code>on_tool_start</code>…) — hooks to intercept the LLM lifecycle</li>
+        <li><strong>Output parsers</strong> — parse LLM output into structured data</li>
+      </ul>
+      <p>Analogy: LangChain is like React — building blocks, but no architecture prescribed.</p>
+    </div>
+
+    <div class="eco-section">
+      <h3 style="color: var(--lg-label)">LangGraph <code>@langchain/langgraph</code></h3>
+      <p><strong>Agent runtime</strong> — orchestration framework for stateful, multi-step agents as graphs.</p>
+      <ul>
+        <li><strong>StateGraph</strong> — nodes (functions) + edges (transitions) forming the agent's decision loop</li>
+        <li><strong>Annotations</strong> — typed state that flows through the graph</li>
+        <li><strong>createAgent()</strong> — pre-built ReAct agent (reason + act loop)</li>
+        <li><strong>Checkpointing</strong> — save/restore agent state between interactions</li>
+        <li><strong>Human-in-the-loop</strong> — pause the agent and wait for user input</li>
+        <li><strong>Subgraphs</strong> — compose multiple agents together</li>
+      </ul>
+      <p>Analogy: LangGraph is like Next.js — architecture (routing = graph, middleware = nodes) on top of the building blocks.</p>
+    </div>
+
+    <div class="eco-section">
+      <h3 style="color: var(--da-label)">DeepAgents <code>deepagents</code></h3>
+      <p><strong>Agent harness</strong> — opinionated wrapper on top of LangGraph.</p>
+      <ul>
+        <li><code>createDeepAgent()</code> — one function: model, tools, system prompt, skills, store, backend</li>
+        <li><strong>Skills</strong> — markdown files defining agent capabilities</li>
+        <li><strong>FilesystemBackend</strong> — load config from disk</li>
+        <li><strong>InMemoryStore</strong> — shared key-value store for agent state</li>
+      </ul>
+      <p><strong>Tradeoff:</strong> Quick to start, but limited for custom agent loops, conditional branching, or multi-agent orchestration.</p>
+    </div>
+
+    <div class="eco-section">
+      <h3 style="color: var(--front-label)">Vercel AI SDK <code>ai</code> <code>@ai-sdk/react</code></h3>
+      <p><strong>Frontend integration</strong> — streaming UI, React bridge.</p>
+      <ul>
+        <li><strong>Backend:</strong> <code>createUIMessageStream()</code> — transform any stream into a UI-compatible format</li>
+        <li><strong>Frontend:</strong> <code>useChat()</code> — React hook for messages, loading, streaming</li>
+        <li><strong>Adapters:</strong> <code>@ai-sdk/langchain</code> — bridge between LangChain and Vercel AI SDK</li>
+      </ul>
+      <p>It's the plumbing between your backend agent and your React UI — framework-agnostic.</p>
+    </div>
+
+    <div class="eco-section">
+      <h3>How they connect</h3>
+      <div class="eco-diagram">User types message
+  → useChat() [Vercel AI SDK]
+  → POST /api/chat
+  → ChatAnthropic [LangChain] inside createDeepAgent() [DeepAgents/LangGraph]
+  → agent.stream() with Langfuse callbacks [LangChain callbacks]
+  → parseLangChainStream() → createUIMessageStream() [Vercel AI SDK]
+  → useChat() renders streaming response</div>
+    </div>
+
+    <div class="eco-section">
+      <h3>npm packages</h3>
+      <table class="eco-packages">
+        <tr><th>Package</th><th>What</th><th>Layer</th></tr>
+        <tr><td><code>@langchain/core</code></td><td>Messages, tools, callbacks, base classes</td><td>LangChain</td></tr>
+        <tr><td><code>@langchain/anthropic</code></td><td>ChatAnthropic model</td><td>LangChain</td></tr>
+        <tr><td><code>langchain</code></td><td>High-level utilities, tool() helper</td><td>LangChain</td></tr>
+        <tr><td><code>@langchain/langgraph</code></td><td>StateGraph, nodes/edges</td><td>LangGraph</td></tr>
+        <tr><td><code>@langchain/langgraph-checkpoint</code></td><td>InMemoryStore, checkpointing</td><td>LangGraph</td></tr>
+        <tr><td><code>deepagents</code></td><td>createDeepAgent, FilesystemBackend, skills</td><td>DeepAgents</td></tr>
+        <tr><td><code>ai</code></td><td>createUIMessageStream, server utilities</td><td>Vercel AI SDK</td></tr>
+        <tr><td><code>@ai-sdk/react</code></td><td>useChat(), useCompletion()</td><td>Vercel AI SDK</td></tr>
+        <tr><td><code>@ai-sdk/langchain</code></td><td>Bridge LangChain ↔ Vercel AI SDK</td><td>Bridge</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script src="learning-map-data.js"></script>
 <script>
 // EXERCISES and LAYER_META are loaded from learning-map-data.js
@@ -1396,21 +1710,16 @@ const detailClose = document.getElementById('detailClose');
 const legendEl = document.getElementById('legend');
 
 // ── Render legend with hover tooltips ──
-const LEGEND_ITEMS = [
-  { layer: 'lc', range: '01-04, 12' },
-  { layer: 'lg', range: '05-07, 10-11' },
-  { layer: 'da', range: '08-09' },
-  { layer: 'front', range: '13' }
-];
+const LEGEND_ITEMS = ['lc', 'lg', 'da', 'front'];
 
-LEGEND_ITEMS.forEach(({ layer, range }) => {
+LEGEND_ITEMS.forEach((layer) => {
   const meta = LAYER_META[layer];
   const item = document.createElement('div');
   item.className = 'legend-item';
   item.dataset.layer = layer;
   item.innerHTML = `
     <div class="legend-swatch" style="background: ${meta.glowColor}"></div>
-    ${meta.label} (${range})
+    ${meta.label}
     <div class="legend-tooltip">
       <div class="legend-tooltip-desc">${meta.tooltip}</div>
     </div>
@@ -1466,6 +1775,7 @@ trunkLayers.forEach((layerId, layerIdx) => {
   label.innerHTML = `
     <span class="layer-label-name">${meta.label}</span>
     <span class="layer-tagline">${meta.tagline}</span>
+    <span class="layer-builds-on">${meta.buildsOn}</span>
   `;
   layerEl.appendChild(label);
 
@@ -1488,7 +1798,7 @@ if (branchExercises.length) {
 
   const sectionLabel = document.createElement('div');
   sectionLabel.className = 'branches-section-label';
-  sectionLabel.textContent = 'Patterns avanc\u00e9s';
+  sectionLabel.textContent = 'Advanced patterns';
   section.appendChild(sectionLabel);
 
   const grid = document.createElement('div');
@@ -2198,6 +2508,18 @@ document.getElementById('morphOverlay').addEventListener('click', (e) => {
 if (typeof MUTATIONS !== 'undefined' && MUTATIONS.length > 0) {
   requestIdleCallback(() => getShikiEngine());
 }
+
+// ── Ecosystem glossary panel ──
+const ecoOverlay = document.getElementById('ecoOverlay');
+document.getElementById('ecoBtn').addEventListener('click', () => {
+  ecoOverlay.classList.add('eco-overlay--visible');
+});
+document.getElementById('ecoClose').addEventListener('click', () => {
+  ecoOverlay.classList.remove('eco-overlay--visible');
+});
+ecoOverlay.addEventListener('click', (e) => {
+  if (e.target === ecoOverlay) ecoOverlay.classList.remove('eco-overlay--visible');
+});
 </script>
 </body>
 </html>
