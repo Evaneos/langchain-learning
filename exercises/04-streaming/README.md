@@ -9,7 +9,7 @@ Recevoir la réponse du LLM **token par token** au lieu d'attendre la réponse c
 - `.stream()` vs `.invoke()` — itérer sur des `AIMessageChunk` au lieu de recevoir un `AIMessage` complet
 - `process.stdout.write()` — afficher les tokens en temps réel (pas de `\n` entre chaque)
 - Streaming + tools — les tool calls arrivent en morceaux (`tool_call_chunks`) qu'il faut reconstituer
-- Le pattern d'événements text/tool qui préfigure `parseLangChainStream()` de di-agent-ui
+- Le pattern d'événements text/tool qu'on transforme ensuite en événements typés pour le frontend
 
 ## Lancer
 
@@ -17,18 +17,9 @@ Recevoir la réponse du LLM **token par token** au lieu d'attendre la réponse c
 npx tsx exercises/04-streaming/index.ts
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans `app/api/chat/agent/agent-invoker.ts:42-51` :
-
-```ts
-const langchainStream = await config.agent.stream(
-    { messages: langchainMessages },
-    { streamMode: 'messages', callbacks: config.callbacks },
-);
-```
-
-Puis `parseLangChainStream()` (même fichier) itère sur ce stream et classe chaque chunk en événements neutres :
+En production, le stream brut de LangChain est transformé en événements typés pour le frontend :
 
 ```ts
 type StreamEvent =
@@ -41,7 +32,7 @@ type StreamEvent =
     | { kind: 'tool-result'; toolCallId: string; toolName: string; content: unknown };
 ```
 
-C'est exactement ce pattern qu'on explore ici : le stream brut de LangChain contient des `AIMessageChunk` avec soit du texte (`content`), soit des morceaux de tool calls (`tool_call_chunks`). di-agent-ui les transforme en événements typés pour le frontend.
+C'est exactement ce pattern qu'on explore ici : le stream contient des `AIMessageChunk` avec soit du texte (`content`), soit des morceaux de tool calls (`tool_call_chunks`). Une couche de parsing les transforme en événements typés pour le frontend.
 
 ## Points clés
 

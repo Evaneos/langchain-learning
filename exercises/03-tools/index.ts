@@ -15,11 +15,11 @@ const model = new ChatAnthropic({
 // tool() wraps a function so the LLM can call it.
 // It combines: a handler (the actual function), a name, a description
 // (tells the LLM WHEN to use it), and a Zod schema (tells the LLM
-// WHAT parameters to provide). Same pattern as di-agent-ui's
-// config/tools/suggest-destinations.ts: { name, description, schema }
+// WHAT parameters to provide). Same pattern used in production agents:
+// { name, description, schema }
 const getWeatherTool = tool(
   async ({ city, month }) => {
-    // Fake implementation — in di-agent-ui, handlers call real APIs
+    // Fake implementation — in production, handlers call real APIs
     return `${city} in ${month}: 28°C, tropical humidity, occasional rain.`;
   },
   {

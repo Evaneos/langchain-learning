@@ -109,7 +109,7 @@ async function partB() {
 
   // streamMode: "messages" yields [message, metadata] tuples — same AIMessageChunk
   // objects as model.stream() in exercise 04, but through the entire agent loop.
-  // This is the exact pattern used in di-agent-ui's agent-invoker.ts:
+  // This is the standard pattern for production chat streaming:
   //   agent.stream({ messages }, { streamMode: 'messages' })
   const stream = await agent.stream(
     { messages: [userMessage] },
@@ -159,7 +159,7 @@ async function partC() {
   console.log("=== Part C: Agent with system prompt ===\n");
 
   // The `systemPrompt` parameter injects a system message at the start of every conversation.
-  // In di-agent-ui, this is the massive system prompt built from skills + context.
+  // In production, this is typically a large system prompt built from skills + context.
   // createAgent accepts it as a string — it wraps it in SystemMessage internally.
   // (In the old createReactAgent API, this was called `prompt`.)
   const agent = createAgent({

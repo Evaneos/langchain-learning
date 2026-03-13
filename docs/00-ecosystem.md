@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Your App (di-agent-ui)                         │
+│  Your App                                        │
 ├─────────────────────────────────────────────────┤
 │  DeepAgents          │  Vercel AI SDK (ai)      │
 │  Opinionated agent   │  Streaming + React hooks  │
@@ -43,7 +43,7 @@ Observability (side-car):
 
 **Analogy**: LangChain is like React — it gives you the building blocks, but doesn't tell you how to architect your app.
 
-**In di-agent-ui**: Used for `ChatAnthropic` model, `tool()` definitions, message types, and callbacks (Langfuse).
+**In a production agent**: Used for `ChatAnthropic` model, `tool()` definitions, message types, and callbacks (observability).
 
 ### LangGraph (`@langchain/langgraph`)
 
@@ -81,7 +81,7 @@ Observability (side-car):
 
 **Analogy**: LangGraph is like Next.js — it provides the architecture (routing = graph, middleware = nodes) on top of the building blocks.
 
-**In di-agent-ui**: Not used directly — DeepAgents wraps it. But `createDeepAgent()` internally uses LangGraph's `createAgent()`.
+**In practice**: Often not used directly when DeepAgents wraps it. But `createDeepAgent()` internally uses LangGraph's `createAgent()`.
 
 ### DeepAgents (`deepagents`)
 
@@ -104,7 +104,7 @@ Observability (side-car):
 - Pre/post-processing hooks on specific nodes
 - Fine-grained control over the state graph
 
-**In di-agent-ui**: Main agent framework. `agent-factory.ts` calls `createDeepAgent()` with model, tools, skills, system prompt.
+**In a production agent**: Typically the main agent framework. You call `createDeepAgent()` with model, tools, skills, and system prompt.
 
 ### Vercel AI SDK (`ai`, `@ai-sdk/react`)
 
@@ -118,7 +118,7 @@ Observability (side-car):
 
 **Analogy**: It's the "plumbing" between your backend agent and your React UI. It doesn't care what agent framework you use.
 
-**In di-agent-ui**: Frontend uses `useChat()`, backend uses `createUIMessageStream()`. The custom `parseLangChainStream()` converts LangChain's stream format into Vercel AI SDK's format.
+**In a production agent**: Frontend uses `useChat()`, backend uses `createUIMessageStream()`. A custom stream parser converts LangChain's stream format into Vercel AI SDK's format.
 
 ### LangSmith
 
@@ -128,7 +128,7 @@ Observability (side-car):
 
 **Provides**: Trace visualization, token counts, latency, cost tracking, prompt playground, evaluations.
 
-**In di-agent-ui**: Optional tracing, enabled via env vars. Feedback submission via API.
+**In a typical setup**: Optional tracing, enabled via env vars. Feedback submission via API.
 
 ### Langfuse
 
@@ -136,9 +136,9 @@ Observability (side-car):
 
 **Provides**: Same as LangSmith (tracing, cost, evals) but self-hostable. Integrates via LangChain callbacks.
 
-**In di-agent-ui**: Primary observability tool. Uses `langfuse-langchain` callback handler.
+**In a typical setup**: Primary observability tool. Uses `langfuse-langchain` callback handler.
 
-## How they relate in di-agent-ui
+## How they relate in practice
 
 ```
 User types message

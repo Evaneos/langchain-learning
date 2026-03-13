@@ -42,8 +42,8 @@ async function partA() {
     .compile({ checkpointer }); // ← the magic line
 
   // Step 3: thread_id identifies a conversation — same thread_id = same memory.
-  // This is the equivalent of a session ID. In di-agent-ui, each chat session
-  // has a unique thread_id stored alongside messages in Redis.
+  // This is the equivalent of a session ID. In production, each chat session
+  // has a unique thread_id stored alongside messages.
   const config = { configurable: { thread_id: "trip-planning-1" } };
 
   // First message: ask about weather
@@ -79,7 +79,7 @@ async function partB() {
 
   // Each thread_id is a separate conversation with its own state.
   // Thread "alice" and thread "bob" don't share any messages or context.
-  // This is how di-agent-ui handles multiple users chatting simultaneously.
+  // This is how production agents handle multiple users chatting simultaneously.
 
   const modelWithTools = model.bindTools(tools);
 

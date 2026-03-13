@@ -3,7 +3,6 @@
 ## What is this
 
 Personal learning repo to understand the LangChain/LangGraph/DeepAgents ecosystem through progressive exercises.
-Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents + LangChain + Claude).
 
 ## Tech stack
 
@@ -19,7 +18,7 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 - `docs/` — Theory notes, glossary, ecosystem overview
 - `exercises/01-*` through `exercises/10-*` — Progressive hands-on exercises
   - Each exercise is self-contained with its own `index.ts` (runnable with `npx tsx`)
-  - Each has a `README.md` explaining the concept and mapping to di-agent-ui
+  - Each has a `README.md` explaining the concept
 - `app/` — Next.js app for exercises needing a frontend (10+)
 
 ## Code conventions
@@ -28,7 +27,7 @@ Reference project: `../evaneos/di-agent-ui/` (travel agent built with DeepAgents
 - README.md files in French
 - Each exercise should be runnable independently
 - Use `dotenv` to load env vars from project root `.env` / `.env.local`
-- When referencing di-agent-ui, use relative paths from this repo root (`../evaneos/di-agent-ui/`)
+
 
 ## Roadmap
 
@@ -43,29 +42,28 @@ See `docs/ROADMAP.md` for the exercise plan (Section 1: Core, Section 2: Advance
 
 - **Never open files/URLs automatically** — always ask the user to check themselves.
 
-## Key context about di-agent-ui
+## Reference architecture
 
-### Architecture overview
+### Typical production agent
 - **DeepAgents** wraps LangGraph's `createAgent()` with opinionated defaults (skills, store, system prompt)
-- **Agent factory** (`app/api/chat/agent/agent-factory.ts`): Singleton that creates `ChatAnthropic` + `createDeepAgent()`
-- **8 tools**: get/update_traveler_project, get/update_traveler_profile, suggest_destinations, suggest_itineraries, suggest_agencies, display_relevant_suggestion
-- **7 skills**: exploration-destinations, cadrage-projet, profilage-voyageur, projection-experiences, synthese-brief, conseil-arbitrage, cloture-conversation
-- **State**: Redis-backed traveler project/profile with 30-day TTL, deep-merge updates
-- **Streaming**: LangChain stream → parseLangChainStream() → StreamEvent → Vercel AI SDK → frontend useChat()
-- **Model**: claude-haiku-4-5 (configurable in `config/model.ts`)
-- **Observability**: Langfuse + LangSmith (not focus of this learning repo)
+- An agent factory creates `ChatAnthropic` + `createDeepAgent()` as a singleton
+- Tools for domain-specific actions (CRUD on entities, suggestions, display)
+- Skills for conversation phases (exploration, profiling, synthesis, closing)
+- State backed by a persistent store (e.g. Redis) with TTL and deep-merge updates
+- **Streaming**: LangChain stream → StreamEvent → Vercel AI SDK → frontend `useChat()`
+- **Observability**: Langfuse + LangSmith
 
-### Request flow in di-agent-ui
+### Typical request flow
 ```
 Frontend useChat() → POST /api/chat
-  → chat-orchestrator.ts: executeChatRequest()
-    → agent-factory.ts: createConfiguredAgent() — creates DeepAgent
-    → agent-invoker.ts: invokeAgent()
-      → message-converter.ts: convertToLangChainMessages()
+  → orchestrator: executeChatRequest()
+    → agent factory: createConfiguredAgent() — creates DeepAgent
+    → invoker: invokeAgent()
+      → convert messages to LangChain format
       → agent.stream({ messages }, { streamMode: 'messages', callbacks })
-      → parseLangChainStream() → StreamEvent[]
-    → stream-handler.ts: StreamEventProcessor → writer → frontend
-    → Redis: persist messages
+      → parse stream → StreamEvent[]
+    → stream processor → writer → frontend
+    → persist messages
 ```
 
 ### Why explore alternatives to DeepAgents

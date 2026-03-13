@@ -145,9 +145,8 @@ async function main() {
   if (!partFilter || partFilter === "C") await partC();
 
   // TODO(human): Implement a classifyChunks() async generator that takes
-  // a stream of AIMessageChunks and yields typed events, similar to
-  // di-agent-ui's parseLangChainStream(). See the StreamEvent type in
-  // the README for the target shape. Start with just:
+  // a stream of AIMessageChunks and yields typed events (a stream parser).
+  // See the StreamEvent type in the README for the target shape. Start with just:
   //   { kind: 'text-delta', content: string }
   //   { kind: 'tool-call-start', name: string, id: string }
   //   { kind: 'tool-call-delta', args: string }

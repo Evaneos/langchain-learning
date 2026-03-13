@@ -1,6 +1,6 @@
 # Roadmap des exercices
 
-## Section 1 — Core (comprendre di-agent-ui)
+## Section 1 — Core
 
 Chemin principal : LangChain → LangGraph → DeepAgents → intégration front.
 
@@ -22,7 +22,7 @@ Chemin principal : LangChain → LangGraph → DeepAgents → intégration front
 
 ## Section 2 — Advanced patterns (après Section 1)
 
-Patterns avancés de graph et workflows complexes. Pas liés à di-agent-ui directement,
+Patterns avancés de graph et workflows complexes. Patterns qui vont au-delà du chemin principal,
 mais nécessaires pour aller plus loin avec LangGraph.
 
 ### Human-in-the-loop

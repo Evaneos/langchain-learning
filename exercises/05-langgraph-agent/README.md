@@ -9,7 +9,7 @@ Automatiser la boucle ReAct (LLM -> tool calls -> execute -> LLM -> ...) avec `c
 - `createAgent()` — crée un graphe LangGraph avec 2 noeuds : "model_request" (LLM) et "tools" (ToolNode)
 - La boucle automatique : le graphe reboucle tant que le LLM demande des tool calls
 - `.invoke()` sur l'agent — retourne l'état final avec tous les messages (user, AI, tool, AI final)
-- `.stream()` avec `streamMode: "messages"` — le pattern exact de di-agent-ui pour le streaming token par token
+- `.stream()` avec `streamMode: "messages"` — le pattern standard pour le streaming token par token en production
 - `systemPrompt` — injecter un system message pour configurer le comportement de l'agent
 
 ## Lancer
@@ -20,22 +20,9 @@ npx tsx exercises/05-langgraph-agent/index.ts A      # une seule partie
 npx tsx exercises/05-langgraph-agent/index.ts B --slow  # streaming au ralenti
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans `app/api/chat/agent/agent-factory.ts:78-85` :
-
-```ts
-this.agent = createDeepAgent({
-  model: this.baseModel,
-  tools: [...toolInstances],
-  skills: [...skillInstances],
-  // ...
-});
-```
-
-`createDeepAgent()` appelle `createAgent()` sous le capot avec des defaults opinionés (skills, store, system prompt). Ici on utilise `createAgent()` directement pour comprendre le mécanisme brut.
-
-Dans `app/api/chat/agent/agent-invoker.ts:42-51`, le streaming utilise `streamMode: 'messages'` — exactement ce qu'on fait en Part B.
+En production, `createDeepAgent()` appelle `createAgent()` sous le capot avec des defaults opinionés (skills, store, system prompt). Ici on utilise `createAgent()` directement pour comprendre le mécanisme brut. Le streaming en production utilise `streamMode: 'messages'` — exactement ce qu'on fait en Part B.
 
 ## Points cles
 
@@ -48,7 +35,7 @@ Dans `app/api/chat/agent/agent-invoker.ts:42-51`, le streaming utilise `streamMo
 
 | Mode | Ce qu'on reçoit | Cas d'usage |
 |---|---|---|
-| `"messages"` | Tuples `[message, metadata]` — tokens LLM un par un + metadata du noeud source | **Apps chat** — c'est le mode de di-agent-ui pour le streaming token par token |
+| `"messages"` | Tuples `[message, metadata]` — tokens LLM un par un + metadata du noeud source | **Apps chat** — le mode standard pour le streaming token par token en production |
 | `"updates"` | État partiel après chaque noeud (`{ model_request: { messages: [...] } }`) | **Observer le graphe** — voir quel noeud a produit quoi, étape par étape |
 | `"values"` | État **complet** du graphe après chaque super-step | **Inspecter l'état global** — utile pour debug ou quand on a un state complexe au-delà de `messages` |
 | `"debug"` | Maximum d'infos (noeud, état complet, timings…) | **Debug poussé** — tout voir pendant le développement |

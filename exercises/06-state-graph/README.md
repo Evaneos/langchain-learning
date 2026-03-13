@@ -21,14 +21,14 @@ npx tsx exercises/06-state-graph/index.ts       # toutes les parties
 npx tsx exercises/06-state-graph/index.ts A      # une seule partie
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-`createDeepAgent()` appelle `createAgent()` qui appelle `StateGraph` sous le capot. Si on avait besoin de :
-- Injecter du contexte dynamique (profil voyageur, skills) → noeud `prepare` comme Part B
+`createDeepAgent()` appelle `createAgent()` qui appelle `StateGraph` sous le capot. Si on a besoin de :
+- Injecter du contexte dynamique (profil utilisateur, skills) → noeud `prepare` comme Part B
 - Post-traiter la reponse (logging, transformation) → noeud `postprocess` comme Part C
 - Router vers differents LLMs selon le type de question → `addConditionalEdges` custom
 
-...on ne pourrait pas le faire avec `createAgent` seul. `StateGraph` donne le controle total.
+...on ne peut pas le faire avec `createAgent` seul. `StateGraph` donne le controle total.
 
 ## Architecture du graphe
 

@@ -17,20 +17,9 @@ Définir des fonctions (tools) que le LLM peut appeler. Le LLM ne les exécute p
 npx tsx exercises/03-tools/index.ts
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans `app/api/chat/agent/tools/suggest-destinations/index.ts` :
-
-```ts
-tool(async (input) => handler(input, sessionId), definition);
-```
-
-Où `definition` (dans `config/tools/suggest-destinations.ts`) est :
-```ts
-{ name: 'suggest_destinations', description: '...', schema: z.object({...}) }
-```
-
-C'est exactement le même pattern : schema Zod pour les paramètres + handler async. Dans di-agent-ui, les 8 tools sont passés à `createDeepAgent()`. Ici on va les binder directement au modèle pour comprendre le mécanisme brut.
+En production, les tools suivent exactement le même pattern : schema Zod pour les paramètres + handler async. Ils sont ensuite passés à `createAgent()` ou `createDeepAgent()`. Ici on les binde directement au modèle pour comprendre le mécanisme brut.
 
 ## Points clés
 

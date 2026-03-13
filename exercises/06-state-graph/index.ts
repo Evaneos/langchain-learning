@@ -90,7 +90,7 @@ async function partB() {
   console.log("=== Part B: Custom pre-processing node ===\n");
 
   // The real power of StateGraph: you can add nodes BEFORE or AFTER the LLM.
-  // In di-agent-ui, the system prompt is built dynamically from skills + traveler context.
+  // In production, the system prompt is often built dynamically from skills + user context.
   // Here we simulate that: a "prepare" node reads raw traveler data from the state
   // and builds a systemPrompt that the agent node will use.
 
@@ -117,7 +117,7 @@ async function partB() {
 
   // The "prepare" node: reads travelContext from state, builds a systemPrompt.
   // This is a pure data transformation — no LLM call, no side effects.
-  // In di-agent-ui, this would be where skills + profile get assembled into the prompt.
+  // In production, this is where skills + user profile get assembled into the prompt.
   async function prepare(state: typeof GraphState.State) {
     const prompt =
       `You are a travel advisor. Here is context about the traveler:\n${state.travelContext}\n\n` +

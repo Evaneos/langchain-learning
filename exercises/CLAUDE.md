@@ -42,7 +42,7 @@ Avant le commit de création (étape 4), mettre à jour le noeud dans `docs/lear
 
 - **`done: true`** si l'exemple 1 fonctionne
 - **`concepts`** : concepts clés, courts, séparés par virgule
-- **`apis[]`** : chaque API clé avec `name`, `from` (package d'origine), `detail` (explication pédagogique riche avec `<code>`, contexte di-agent-ui si pertinent, et liens vers les autres exercices), `signature` optionnelle
+- **`apis[]`** : chaque API clé avec `name`, `from` (package d'origine), `detail` (explication pédagogique riche avec `<code>`, contexte production si pertinent, et liens vers les autres exercices), `signature` optionnelle
 - **`insights[]`** : phrases "aha moment" qui créent un déclic de compréhension. Non-obvious, intelligentes. Peuvent faire le pont entre exercices ("Structured output IS tool calling in disguise"). Laisser vide si rien de pertinent — mieux vaut 0 insight que des insights médiocres
 - **`code`** : snippet conceptuel (~8-18 lignes) montrant le **key pattern** de l'exercice. Affiché dans le detail panel avec coloration Shiki. Règles :
   - Montrer le pattern essentiel uniquement — pas d'imports, pas de dotenv, pas de setup du model

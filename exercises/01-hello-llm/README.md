@@ -17,18 +17,9 @@ Le building block le plus basique : appeler un LLM via `ChatAnthropic`.
 npx tsx exercises/01-hello-llm/index.ts
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans `app/api/chat/agent/agent-factory.ts:65-68` :
-
-```ts
-this.baseModel = new ChatAnthropic({
-  model: AGENT_MODEL,
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-```
-
-C'est exactement la même instanciation de `ChatAnthropic`. Dans di-agent-ui, le modèle est ensuite passé à `createDeepAgent()` qui l'enveloppe dans un agent LangGraph. Ici on l'appelle directement pour comprendre le building block brut.
+`ChatAnthropic` est le point d'entrée de tout agent LangChain. En production, cette instance est ensuite passée à `createAgent()` ou `createDeepAgent()` qui l'enveloppent dans un graphe LangGraph. Ici on l'appelle directement pour comprendre le building block brut.
 
 ## Points clés
 

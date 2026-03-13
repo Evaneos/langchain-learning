@@ -67,10 +67,7 @@ async function partB() {
   // They tell the agent WHEN to activate and WHAT procedure to follow —
   // natural language middleware, essentially.
   //
-  // In di-agent-ui, 7 skills define the entire travel consultation flow:
-  //   exploration-destinations, cadrage-projet, profilage-voyageur,
-  //   projection-experiences, synthese-brief, conseil-arbitrage,
-  //   cloture-conversation
+  // In production, multiple skills define the agent's behavior flow.
   // Each is a SKILL.md file with YAML frontmatter + markdown instructions.
   //
   // Here we created a "travel-advisor" skill (see skills/travel-advisor/SKILL.md)

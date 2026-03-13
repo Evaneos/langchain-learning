@@ -20,14 +20,9 @@ npx tsx exercises/07-checkpointing/index.ts       # toutes les parties
 npx tsx exercises/07-checkpointing/index.ts A      # une seule partie
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans di-agent-ui, la persistence est gérée par Redis (pas un checkpointer LangGraph) :
-- Les messages sont stockés/relus manuellement via `redis-message-store.ts`
-- Chaque session de chat a un `chatId` qui joue le même rôle que `thread_id`
-- L'isolation entre utilisateurs est assurée par des clés Redis distinctes
-
-Le checkpointer LangGraph offre les mêmes garanties mais **automatiquement** — pas besoin de code custom pour sauvegarder/recharger les messages.
+En production, la persistence peut être gérée manuellement (ex: Redis, PostgreSQL) ou via un checkpointer LangGraph. L'approche manuelle nécessite du code custom pour sauvegarder/recharger les messages et isoler les sessions. Le checkpointer LangGraph offre les mêmes garanties mais **automatiquement** — chaque `thread_id` est une conversation isolée sans code supplémentaire.
 
 ## Architecture du graphe
 

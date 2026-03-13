@@ -17,19 +17,9 @@ Forcer le LLM à retourner des données typées et validées grâce aux schemas 
 npx tsx exercises/02-structured-output/index.ts
 ```
 
-## Mapping vers di-agent-ui
+## En production
 
-Dans `app/api/chat/agent/config/schemas/traveler-project.schema.ts` :
-
-```ts
-export const TravelerProjectSchema = z.object({
-  destination: DestinationSchema.optional().describe('Destination information'),
-  dates: DatesSchema.optional().describe('Travel dates and duration'),
-  // ...
-});
-```
-
-Ces schemas définissent la structure du projet voyageur. Dans di-agent-ui, ils sont utilisés comme paramètres des **tools** (`update_traveler_project` prend un `TravelerProjectSchema` partiel). Ici, on utilise `.withStructuredOutput()` pour obtenir les mêmes réponses validées par Zod directement.
+En production, les schemas Zod sont utilisés comme paramètres des **tools** (ex: un tool `update_project` prend un schema partiel). Ici, on utilise `.withStructuredOutput()` pour obtenir des réponses validées par Zod directement — c'est la base des tools (exercice 03).
 
 ## Points clés
 

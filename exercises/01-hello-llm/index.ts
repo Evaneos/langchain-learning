@@ -3,7 +3,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 config({ path: ".env.local" });
 
-// Create a ChatAnthropic instance — same as agent-factory.ts:65-68 in di-agent-ui
+// Create a ChatAnthropic instance — the most basic LangChain building block
 const model = new ChatAnthropic({
   model: "claude-haiku-4-5",
   apiKey: process.env.ANTHROPIC_API_KEY,
