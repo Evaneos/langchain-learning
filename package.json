@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "latest": "npx tsx $(ls -d exercises/*/index.ts | sort | tail -1)",
-    "ex": "bash scripts/run-exercise.sh",
-    "push:evaneos": "git push evaneos main"
+    "ex": "bash scripts/run-exercise.sh"
   },
   "dependencies": {
     "@ai-sdk/langchain": "^1.0.101",
