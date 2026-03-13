@@ -8,16 +8,13 @@ Repo d'apprentissage pour comprendre l'écosystème **LangChain / LangGraph / De
 
 ## Hiérarchie des librairies
 
-| Librairie | Rôle | Dépend de |
-|-----------|------|-----------|
-| **LangGraph** | Agent runtime — graphs, state, agent loops | LangChain |
-| **LangChain** | Agent framework — models, messages, tools | — |
-| **DeepAgents** | Agent harness — skills, middleware, store | LangGraph |
+| Librairie | Rôle | Dépend de | Alternatives |
+|-----------|------|-----------|--------------|
+| **LangChain** | Framework — abstractions & integrations | — | AI SDK, LlamaIndex, CrewAI |
+| **LangGraph** | Runtime — durable execution, streaming, HITL, persistence | LangChain | Temporal, Inngest |
+| **DeepAgents** | Harness — predefined tools, prompts, subagents | LangGraph | Claude Agent SDK |
 
-```
-LangGraph ← LangChain ← DeepAgents
- runtime      framework     harness
-```
+> **LangChain** ➜ **LangGraph** ➜ **DeepAgents**
 
 ## Démarrage rapide
 

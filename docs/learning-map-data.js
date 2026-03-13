@@ -582,27 +582,36 @@ const LAYER_META = {
     className: 'layer--lc',
     glowColor: 'var(--lc-glow)',
     lineColor: 'var(--lc-line)',
-    tagline: 'Agent framework — SDK for LLM interaction',
+    tagline: 'Framework — abstractions & integrations',
     buildsOn: 'The building blocks<br>models, messages, tools, callbacks',
-    tooltip: '<strong>LangChain</strong> is the <strong>agent framework</strong> — the SDK for LLM interaction. It provides a unified interface to call any LLM (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>…), structure inputs/outputs with schemas, and define tools. Think of it as the <strong>building blocks</strong>: you write each step yourself.'
+    valueAdd: ['Abstractions', 'Integrations'],
+    whenToUse: ['Getting started quickly', 'Standardizing how a team builds'],
+    alternatives: ['AI SDK', 'LlamaIndex', 'CrewAI', 'Google SDK', 'OpenAI Agents SDK'],
+    tooltip: '<strong>LangChain</strong> is the <strong>framework</strong> — abstractions and integrations for LLMs. It provides a unified interface to call any LLM (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>…), structure inputs/outputs with schemas, and define tools. Think of it as the <strong>building blocks</strong>: you write each step yourself.<br><br><em>Alternatives:</em> AI SDK, LlamaIndex, CrewAI, Google SDK, OpenAI Agents SDK'
   },
   lg: {
     label: 'LangGraph',
     className: 'layer--lg',
     glowColor: 'var(--lg-glow)',
     lineColor: 'var(--lg-line)',
-    tagline: 'Agent runtime — orchestration framework',
-    buildsOn: 'Built on LangChain SDK<br>adds graphs, state, agent loops',
-    tooltip: '<strong>LangGraph</strong> is the <strong>agent runtime</strong> — an orchestration framework. It sits on top of LangChain and orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop. You gain control over flow, memory, and human-in-the-loop.'
+    tagline: 'Runtime — durable execution, streaming, HITL, persistence',
+    buildsOn: 'Built on LangChain framework<br>adds graphs, state, agent loops',
+    valueAdd: ['Durable execution', 'Streaming', 'HITL', 'Persistence'],
+    whenToUse: ['Low-level control', 'Long running, stateful workflows and agents'],
+    alternatives: ['Temporal', 'Inngest'],
+    tooltip: '<strong>LangGraph</strong> is the <strong>runtime</strong> — durable execution, streaming, human-in-the-loop, and persistence. It sits on top of LangChain and orchestrates multi-step workflows as <strong>state graphs</strong> with nodes, edges, and conditions. <code>createAgent</code> is a pre-built 2-node graph that automates the tool loop.<br><br><em>Alternatives:</em> Temporal, Inngest'
   },
   da: {
     label: 'DeepAgents',
     className: 'layer--da',
     glowColor: 'var(--da-glow)',
     lineColor: 'var(--da-line)',
-    tagline: 'Agent harness — opinionated wrapper',
-    buildsOn: 'Built on LangGraph runtime<br>adds skills, store, middleware',
-    tooltip: '<strong>DeepAgents</strong> is the <strong>agent harness</strong> — an opinionated wrapper. It wraps LangGraph\'s <code>createAgent</code> with opinionated defaults (skills, store, system prompt) — less control, faster setup. The convenience/control trade-off: 80% instantly, but custom nodes are the escape hatch.'
+    tagline: 'Harness — predefined tools, prompts, subagents',
+    buildsOn: 'Built on LangGraph runtime<br>adds predefined tools, prompts, subagents',
+    valueAdd: ['Predefined tools', 'Prompts', 'Subagents'],
+    whenToUse: ['More autonomous agents', 'Agents faced with complex, non-deterministic tasks'],
+    alternatives: ['Claude Agent SDK'],
+    tooltip: '<strong>DeepAgents</strong> is the <strong>harness</strong> — predefined tools, prompts, and subagents. It wraps LangGraph\'s <code>createAgent</code> with opinionated defaults — less control, faster setup. The convenience/control trade-off: 80% instantly, but custom nodes are the escape hatch.<br><br><em>Alternative:</em> Claude Agent SDK'
   },
   front: {
     label: 'Vercel AI SDK',
@@ -611,6 +620,9 @@ const LAYER_META = {
     lineColor: 'var(--front-line)',
     tagline: 'Frontend integration — streaming UI, React bridge',
     buildsOn: 'Independent<br>connects to any LangChain stream',
+    valueAdd: ['useChat()', 'Streaming UI', 'Framework-agnostic'],
+    whenToUse: ['React/Next.js frontend', 'Streaming chat UI'],
+    alternatives: [],
     tooltip: '<strong>Vercel AI SDK</strong> handles the frontend: <code>useChat()</code> for streaming UI, bridging the LangChain stream to React. Independent from DeepAgents — it connects to any LangChain/LangGraph stream.'
   }
 };

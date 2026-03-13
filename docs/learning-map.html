@@ -1591,15 +1591,15 @@
           <div class="eco-stack-left">
             <div class="eco-stack-row eco-stack-da">
               <strong style="color: var(--da-label)">DeepAgents</strong>
-              <span>Agent harness — skills, store, middleware</span>
+              <span>Harness — predefined tools, prompts, subagents</span>
             </div>
             <div class="eco-stack-row eco-stack-lg">
               <strong style="color: var(--lg-label)">LangGraph</strong>
-              <span>Agent runtime — state machines</span>
+              <span>Runtime — durable execution, streaming, HITL, persistence</span>
             </div>
             <div class="eco-stack-row eco-stack-lc">
               <strong style="color: var(--lc-label)">LangChain</strong>
-              <span>Agent framework — models, tools, messages, callbacks</span>
+              <span>Framework — abstractions & integrations</span>
             </div>
           </div>
           <div class="eco-stack-right eco-stack-front">
@@ -1619,7 +1619,7 @@
 
     <div class="eco-section">
       <h3 style="color: var(--lc-label)">LangChain <code>langchain</code> <code>@langchain/core</code></h3>
-      <p><strong>Agent framework</strong> — SDK for LLM interaction.</p>
+      <p><strong>Framework</strong> — abstractions & integrations for LLMs.</p>
       <ul>
         <li><strong>Chat models</strong> (<code>ChatAnthropic</code>, <code>ChatOpenAI</code>) — unified interface to call any LLM</li>
         <li><strong>Messages</strong> (<code>HumanMessage</code>, <code>AIMessage</code>, <code>SystemMessage</code>, <code>ToolMessage</code>)</li>
@@ -1627,33 +1627,36 @@
         <li><strong>Callbacks</strong> (<code>on_llm_start</code>, <code>on_tool_start</code>…) — hooks to intercept the LLM lifecycle</li>
         <li><strong>Output parsers</strong> — parse LLM output into structured data</li>
       </ul>
-      <p>Analogy: LangChain is like React — building blocks, but no architecture prescribed.</p>
+      <p><em>When to use:</em> Getting started quickly · Standardizing how a team builds</p>
+      <p><em>Alternatives:</em> AI SDK, LlamaIndex, CrewAI, Google SDK, OpenAI Agents SDK</p>
     </div>
 
     <div class="eco-section">
       <h3 style="color: var(--lg-label)">LangGraph <code>@langchain/langgraph</code></h3>
-      <p><strong>Agent runtime</strong> — orchestration framework for stateful, multi-step agents as graphs.</p>
+      <p><strong>Runtime</strong> — durable execution, streaming, HITL, and persistence for stateful agents.</p>
       <ul>
+        <li><strong>Durable execution</strong> — agents survive crashes and restarts via checkpointing</li>
+        <li><strong>Streaming</strong> — real-time token-by-token output through the agent loop</li>
+        <li><strong>Human-in-the-loop (HITL)</strong> — pause the agent, wait for user input, resume</li>
+        <li><strong>Persistence</strong> — save/restore agent state between interactions</li>
         <li><strong>StateGraph</strong> — nodes (functions) + edges (transitions) forming the agent's decision loop</li>
-        <li><strong>Annotations</strong> — typed state that flows through the graph</li>
         <li><strong>createAgent()</strong> — pre-built ReAct agent (reason + act loop)</li>
-        <li><strong>Checkpointing</strong> — save/restore agent state between interactions</li>
-        <li><strong>Human-in-the-loop</strong> — pause the agent and wait for user input</li>
-        <li><strong>Subgraphs</strong> — compose multiple agents together</li>
       </ul>
-      <p>Analogy: LangGraph is like Next.js — architecture (routing = graph, middleware = nodes) on top of the building blocks.</p>
+      <p><em>When to use:</em> Low-level control · Long running, stateful workflows and agents</p>
+      <p><em>Alternatives:</em> Temporal, Inngest</p>
     </div>
 
     <div class="eco-section">
       <h3 style="color: var(--da-label)">DeepAgents <code>deepagents</code></h3>
-      <p><strong>Agent harness</strong> — opinionated wrapper on top of LangGraph.</p>
+      <p><strong>Harness</strong> — predefined tools, prompts, and subagents on top of LangGraph.</p>
       <ul>
-        <li><code>createDeepAgent()</code> — one function: model, tools, system prompt, skills, store, backend</li>
-        <li><strong>Skills</strong> — markdown files defining agent capabilities</li>
-        <li><strong>FilesystemBackend</strong> — load config from disk</li>
-        <li><strong>InMemoryStore</strong> — shared key-value store for agent state</li>
+        <li><strong>Predefined tools</strong> — filesystem tools (ls, read, write, edit, glob, grep) out of the box</li>
+        <li><strong>Prompts</strong> — skills (SKILL.md) that guide agent behavior via natural language</li>
+        <li><strong>Subagents</strong> — <code>task</code> tool for delegating work to child agents</li>
+        <li><code>createDeepAgent()</code> — one function: model, tools, skills, store, backend</li>
       </ul>
-      <p><strong>Tradeoff:</strong> Quick to start, but limited for custom agent loops, conditional branching, or multi-agent orchestration.</p>
+      <p><em>When to use:</em> More autonomous agents · Agents faced with complex, non-deterministic tasks</p>
+      <p><em>Alternative:</em> Claude Agent SDK</p>
     </div>
 
     <div class="eco-section">
