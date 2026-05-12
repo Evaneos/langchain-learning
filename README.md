@@ -51,3 +51,9 @@ Les exercices sont conçus pour être générés avec **Claude Code**. Le fichie
 ## Roadmap
 
 Voir [`docs/ROADMAP.md`](./docs/ROADMAP.md) pour le plan complet des exercices (Section 1 : Core, Section 2 : Patterns avancés).
+
+## Supply chain protection
+
+This repo pins npm installs to packages published before a fixed date via the `before` directive in `.npmrc`, as a mitigation against npm supply chain attacks (ref INC-227).
+
+**If you need to upgrade dependencies**, update the `before` date in `.npmrc` to a value at most today minus 7 days. This 7-day delay leaves time for the community and automated scanners to detect and unpublish compromised packages before they reach our install.
